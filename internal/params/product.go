@@ -18,12 +18,12 @@ type ProductResponse struct {
 type ProductQueryParams struct {
 	// can be search with
 	// id and name
-	Search string `json:"search"`
+	Search string `form:"search"`
 	// can be filtered by product type
-	Types []string `json:"types"`
+	Types []string `form:"types"`
 	// can be used with
 	// sort=updated_at:desc,price:asc,name:desc
-	Sort []string `json:"sort"`
+	Sort []string `form:"sort"`
 }
 
 func (pqr *ProductQueryParams) Validate() error {

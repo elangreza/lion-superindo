@@ -3,6 +3,8 @@ package postgresql
 import (
 	"context"
 	"database/sql"
+	"strconv"
+	"strings"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/elangreza14/superindo/internal/domain"
@@ -13,20 +15,21 @@ type ProductRepo struct {
 	db *sql.DB
 }
 
-func NewProductsRepo(db *sql.DB) *ProductRepo {
+func NewProductRepo(db *sql.DB) *ProductRepo {
 	return &ProductRepo{db}
 }
 
 func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryParams) ([]domain.Product, error) {
-	q := squirrel.
+	q := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Select("id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at").
 		From("products p")
 
 	if len(req.Search) != 0 {
-		q = q.Where(squirrel.Or{
-			squirrel.Eq{"p.id": req.Search},
-			squirrel.Eq{"p.name": "%" + req.Search + "%"},
-		})
+		if _, err := strconv.Atoi(req.Search); err == nil {
+			q = q.Where(squirrel.Eq{"p.id": req.Search})
+		} else {
+			q = q.Where(squirrel.Like{"LOWER(p.name)": "%" + strings.ToLower(req.Search) + "%"})
+		}
 	}
 
 	if len(req.Types) != 0 {
@@ -42,7 +45,7 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryP
 		return nil, err
 	}
 
-	rows, err := pr.db.QueryContext(ctx, qr, args)
+	rows, err := pr.db.QueryContext(ctx, qr, args...)
 	if err != nil {
 		return nil, err
 	}

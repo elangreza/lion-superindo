@@ -1,13 +1,15 @@
 package service
 
 import (
+	"context"
+
 	"github.com/elangreza14/superindo/internal/domain"
 	"github.com/elangreza14/superindo/internal/params"
 )
 
 type (
 	ProductRepo interface {
-		ListProduct(req params.ProductQueryParams) ([]domain.Product, error)
+		ListProduct(ctx context.Context, req params.ProductQueryParams) ([]domain.Product, error)
 	}
 
 	ProductService struct {
@@ -21,8 +23,8 @@ func NewProductService(repo ProductRepo) *ProductService {
 	}
 }
 
-func (ps *ProductService) ListProduct(req params.ProductQueryParams) ([]params.ProductResponse, error) {
-	products, err := ps.repo.ListProduct(req)
+func (ps *ProductService) ListProduct(ctx context.Context, req params.ProductQueryParams) ([]params.ProductResponse, error) {
+	products, err := ps.repo.ListProduct(ctx, req)
 	if err != nil {
 		return nil, err
 	}
