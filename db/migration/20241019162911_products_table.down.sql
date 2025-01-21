@@ -1,0 +1,8 @@
+BEGIN
+;
+
+DROP TABLE IF EXISTS "products";
+
+DROP SEQUENCE IF EXISTS "productseq";
+
+COMMIT;
