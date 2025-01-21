@@ -1,5 +1,5 @@
 INSERT INTO
-    public."types" ("name")
+    public."product_types" ("name")
 VALUES
     ('Sayuran'),
     ('Protein'),
@@ -11,7 +11,7 @@ INSERT INTO
         "name",
         quantity,
         price,
-        type_name
+        product_type_name
     )
 VALUES
     ('Sawi', 10, 3000, 'Sayuran'),
