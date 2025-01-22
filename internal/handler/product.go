@@ -9,7 +9,7 @@ import (
 )
 
 type ProductService interface {
-	ListProduct(ctx context.Context, args params.ProductQueryParams) ([]params.ProductResponse, error)
+	ListProduct(ctx context.Context, args params.ProductQueryParams) (*params.ProductsResponse, error)
 }
 
 // ProductHandler ...
@@ -40,7 +40,7 @@ func (ph *ProductHandler) ListProductHandler() gin.HandlerFunc {
 
 		res, err := ph.svc.ListProduct(c, query)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, nil)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
 			return
 		}
 

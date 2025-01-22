@@ -19,10 +19,8 @@ func NewProductRepo(db *sql.DB) *ProductRepo {
 	return &ProductRepo{db}
 }
 
-func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryParams) ([]domain.Product, error) {
-	q := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
-		Select("id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at").
-		From("products p")
+func (pr *ProductRepo) ListQuery(req params.ProductQueryParams) squirrel.SelectBuilder {
+	q := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).Select().From("products p")
 
 	if len(req.Search) != 0 {
 		if _, err := strconv.Atoi(req.Search); err == nil {
@@ -36,22 +34,53 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryP
 		q = q.Where(squirrel.Eq{"p.product_type_name": req.Types})
 	}
 
-	for key, direction := range req.GetSortMapping() {
-		if key == "updated_at" {
-			q = q.OrderBy("coalesce(p.updated_at, p.created_at)" + " " + direction)
-		} else {
-			q = q.OrderBy(key + " " + direction)
+	return q
+}
+
+func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryParams) (int, []domain.Product, error) {
+	qBase := pr.ListQuery(req)
+	qCount := qBase.Columns("count(id)")
+	qc, args, err := qCount.ToSql()
+	if err != nil {
+		return 0, nil, err
+	}
+	totalProducts := 0
+	err = pr.db.QueryRow(qc, args...).Scan(&totalProducts)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	if totalProducts == 0 {
+		return 0, nil, nil
+	}
+
+	q := qBase.Columns("id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at")
+
+	if req.GetSortMapping() != nil {
+		for key, direction := range req.GetSortMapping() {
+			if key == "updated_at" {
+				q = q.OrderBy("coalesce(p.updated_at, p.created_at)" + " " + direction)
+			} else {
+				q = q.OrderBy(key + " " + direction)
+			}
 		}
+	} else {
+		q = q.OrderBy("id asc")
+	}
+
+	q = q.Limit(uint64(req.Limit))
+	if req.Page > 1 {
+		q = q.Offset(req.Limit * (req.Page - 1))
 	}
 
 	qr, args, err := q.ToSql()
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
 	rows, err := pr.db.QueryContext(ctx, qr, args...)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	defer rows.Close()
 
@@ -68,10 +97,10 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryP
 			&product.UpdatedAt,
 		)
 		if err != nil {
-			return nil, err
+			return 0, nil, err
 		}
 		products = append(products, product)
 	}
 
-	return products, nil
+	return totalProducts, products, nil
 }

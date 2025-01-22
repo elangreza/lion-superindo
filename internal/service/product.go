@@ -9,7 +9,7 @@ import (
 
 type (
 	ProductRepo interface {
-		ListProduct(ctx context.Context, req params.ProductQueryParams) ([]domain.Product, error)
+		ListProduct(ctx context.Context, req params.ProductQueryParams) (int, []domain.Product, error)
 	}
 
 	ProductService struct {
@@ -23,19 +23,27 @@ func NewProductService(repo ProductRepo) *ProductService {
 	}
 }
 
-func (ps *ProductService) ListProduct(ctx context.Context, req params.ProductQueryParams) ([]params.ProductResponse, error) {
-	products, err := ps.repo.ListProduct(ctx, req)
+func (ps *ProductService) ListProduct(ctx context.Context, req params.ProductQueryParams) (*params.ProductsResponse, error) {
+	totalProducts, products, err := ps.repo.ListProduct(ctx, req)
 	if err != nil {
 		return nil, err
 	}
+	totalPage := totalProducts / int(req.Limit)
+	if totalProducts%int(req.Limit) != 0 {
+		totalPage++
+	}
 
-	res := []params.ProductResponse{}
+	res := params.ProductsResponse{
+		TotalData: totalProducts,
+		TotalPage: totalPage,
+		Products:  []params.ProductResponse{},
+	}
 	for _, product := range products {
 		updatedAt := product.CreatedAt
 		if product.UpdatedAt != nil {
 			updatedAt = *product.UpdatedAt
 		}
-		res = append(res,
+		res.Products = append(res.Products,
 			params.ProductResponse{
 				ID:       product.ID,
 				Name:     product.Name,
@@ -46,5 +54,5 @@ func (ps *ProductService) ListProduct(ctx context.Context, req params.ProductQue
 			})
 	}
 
-	return res, nil
+	return &res, nil
 }

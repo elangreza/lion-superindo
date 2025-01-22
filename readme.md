@@ -7,7 +7,8 @@ indo, dengan spesifikasi sebagai berikut :
 - [x] Dapat melakukan pencarian bedasarkan nama dan id product
 - [x] Dapat melakukan filter produk berdasarkan tipe produk Sayuran, Protein, Buah dan Snack
 - [x] Dapat melakukan sorting berdasarkan tanggal, harga dan nama product
-      Tech Stack :
+
+checkpoint
 
 - [x] Language : Golang
 - [x] Database : SQL / NoSQL + Seeder + migration
@@ -15,3 +16,4 @@ indo, dengan spesifikasi sebagai berikut :
 - [ ] Dependency Injection : wire (Optional)
 - [ ] Unittest (Optional)
 - [x] Docker (Optional
+- [ ] Docs

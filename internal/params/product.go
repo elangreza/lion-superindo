@@ -15,6 +15,12 @@ type ProductResponse struct {
 	UpdateAt time.Time `json:"updated_at"`
 }
 
+type ProductsResponse struct {
+	TotalData int               `json:"total_data"`
+	TotalPage int               `json:"total_page"`
+	Products  []ProductResponse `json:"products"`
+}
+
 type ProductQueryParams struct {
 	// can be search with
 	// id and name
@@ -25,9 +31,15 @@ type ProductQueryParams struct {
 	// sort=updated_at:desc,price:asc,name:desc
 	Sorts   []string `form:"sorts"`
 	sortMap map[string]string
+	Limit   uint64 `form:"limit"`
+	Page    uint64 `form:"page"`
 }
 
 func (pqr *ProductQueryParams) Validate() error {
+	if pqr.Limit == 0 {
+		pqr.Limit = 5
+	}
+
 	pqr.Search = strings.TrimSpace(pqr.Search)
 
 	if len(pqr.Sorts) > 0 {
