@@ -1,5 +1,7 @@
 package service
 
+//go:generate mockgen -source $GOFILE -destination ../../mock/service/mock_$GOFILE -package mock$GOPACKAGE
+
 import (
 	"context"
 
@@ -9,7 +11,8 @@ import (
 
 type (
 	ProductRepo interface {
-		ListProduct(ctx context.Context, req params.ProductQueryParams) (int, []domain.Product, error)
+		ListProduct(ctx context.Context, req params.ProductQueryParams) ([]domain.Product, error)
+		TotalProduct(ctx context.Context, req params.ProductQueryParams) (int, error)
 	}
 
 	ProductService struct {
@@ -24,20 +27,30 @@ func NewProductService(repo ProductRepo) *ProductService {
 }
 
 func (ps *ProductService) ListProduct(ctx context.Context, req params.ProductQueryParams) (*params.ProductsResponse, error) {
-	totalProducts, products, err := ps.repo.ListProduct(ctx, req)
+	totalProducts, err := ps.repo.TotalProduct(ctx, req)
 	if err != nil {
 		return nil, err
-	}
-	totalPage := totalProducts / int(req.Limit)
-	if totalProducts%int(req.Limit) != 0 {
-		totalPage++
 	}
 
 	res := params.ProductsResponse{
 		TotalData: totalProducts,
-		TotalPage: totalPage,
 		Products:  []params.ProductResponse{},
 	}
+
+	if totalProducts == 0 {
+		return &res, nil
+	}
+
+	products, err := ps.repo.ListProduct(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	res.TotalPage = totalProducts / int(req.Limit)
+	if totalProducts%int(req.Limit) != 0 {
+		res.TotalPage++
+	}
+
 	for _, product := range products {
 		updatedAt := product.CreatedAt
 		if product.UpdatedAt != nil {

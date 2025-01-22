@@ -1,5 +1,7 @@
 package postgresql
 
+//go:generate mockgen -source $GOFILE -destination ../../mock/postgresql/mock_$GOFILE -package mock$GOPACKAGE
+
 import (
 	"context"
 	"database/sql"
@@ -11,12 +13,19 @@ import (
 	"github.com/elangreza14/superindo/internal/params"
 )
 
-type ProductRepo struct {
-	db *sql.DB
-}
+type (
+	Cache interface {
+		Set(key string, Value any) error
+	}
 
-func NewProductRepo(db *sql.DB) *ProductRepo {
-	return &ProductRepo{db}
+	ProductRepo struct {
+		db    *sql.DB
+		cache Cache
+	}
+)
+
+func NewProductRepo(db *sql.DB, cache Cache) *ProductRepo {
+	return &ProductRepo{db, cache}
 }
 
 func (pr *ProductRepo) ListQuery(req params.ProductQueryParams) squirrel.SelectBuilder {
@@ -37,24 +46,9 @@ func (pr *ProductRepo) ListQuery(req params.ProductQueryParams) squirrel.SelectB
 	return q
 }
 
-func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryParams) (int, []domain.Product, error) {
-	qBase := pr.ListQuery(req)
-	qCount := qBase.Columns("count(id)")
-	qc, args, err := qCount.ToSql()
-	if err != nil {
-		return 0, nil, err
-	}
-	totalProducts := 0
-	err = pr.db.QueryRow(qc, args...).Scan(&totalProducts)
-	if err != nil {
-		return 0, nil, err
-	}
+func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryParams) ([]domain.Product, error) {
 
-	if totalProducts == 0 {
-		return 0, nil, nil
-	}
-
-	q := qBase.Columns("id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at")
+	q := pr.ListQuery(req).Columns("id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at")
 
 	if req.GetSortMapping() != nil {
 		for key, direction := range req.GetSortMapping() {
@@ -75,12 +69,12 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryP
 
 	qr, args, err := q.ToSql()
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 
 	rows, err := pr.db.QueryContext(ctx, qr, args...)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -97,10 +91,28 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryP
 			&product.UpdatedAt,
 		)
 		if err != nil {
-			return 0, nil, err
+			return nil, err
 		}
 		products = append(products, product)
 	}
 
-	return totalProducts, products, nil
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return products, nil
+}
+
+func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ProductQueryParams) (totalProducts int, err error) {
+	qCount := pr.ListQuery(req).Columns("count(id)")
+	qc, args, err := qCount.ToSql()
+	if err != nil {
+		return
+	}
+
+	if err = pr.db.QueryRow(qc, args...).Scan(&totalProducts); err != nil {
+		return
+	}
+
+	return
 }

@@ -29,7 +29,7 @@ func main() {
 	errChecker(err)
 	defer pool.Close()
 
-	productRepo := postgresql.NewProductRepo(pool)
+	productRepo := postgresql.NewProductRepo(pool, nil)
 	productService := service.NewProductService(productRepo)
 	productHandler := handler.NewProductHandler(productService)
 
