@@ -35,6 +35,7 @@ func main() {
 
 	srv := gin.New()
 	srv.GET("/products", productHandler.ListProductHandler())
+	srv.POST("/products", productHandler.CreateProductHandler())
 	srv.Run(cfg.HTTP_PORT)
 }
 

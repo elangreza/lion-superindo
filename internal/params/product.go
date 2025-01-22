@@ -15,13 +15,13 @@ type ProductResponse struct {
 	UpdateAt time.Time `json:"updated_at"`
 }
 
-type ProductsResponse struct {
+type ListProductResponses struct {
 	TotalData int               `json:"total_data"`
 	TotalPage int               `json:"total_page"`
 	Products  []ProductResponse `json:"products"`
 }
 
-type ProductQueryParams struct {
+type ListProductQueryParams struct {
 	// can be search with
 	// id and name
 	Search string `form:"search"`
@@ -35,7 +35,7 @@ type ProductQueryParams struct {
 	Page    uint64 `form:"page"`
 }
 
-func (pqr *ProductQueryParams) Validate() error {
+func (pqr *ListProductQueryParams) Validate() error {
 	if pqr.Limit == 0 {
 		pqr.Limit = 5
 	}
@@ -71,6 +71,34 @@ func (pqr *ProductQueryParams) Validate() error {
 	return nil
 }
 
-func (pqr *ProductQueryParams) GetSortMapping() map[string]string {
+func (pqr *ListProductQueryParams) GetSortMapping() map[string]string {
 	return pqr.sortMap
+}
+
+type CreateProductRequest struct {
+	Name     string `json:"name"`
+	Quantity int    `json:"quantity"`
+	Price    int    `json:"price"`
+	Type     string `json:"type"`
+}
+
+func (pqr *CreateProductRequest) Validate() error {
+	if len(pqr.Name) == 0 {
+		return errors.New("name cannot be empty")
+	}
+
+	if len(pqr.Type) == 0 {
+		return errors.New("type cannot be empty")
+	}
+	pqr.Type = strings.ToLower(pqr.Type)
+
+	if pqr.Quantity < 0 {
+		return errors.New("quantity cannot be negative")
+	}
+
+	if pqr.Price < 0 {
+		return errors.New("price cannot be negative")
+	}
+
+	return nil
 }

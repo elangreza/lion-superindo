@@ -42,8 +42,22 @@ func (m *MockProductRepo) EXPECT() *MockProductRepoMockRecorder {
 	return m.recorder
 }
 
+// CreateProduct mocks base method.
+func (m *MockProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateProduct", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateProduct indicates an expected call of CreateProduct.
+func (mr *MockProductRepoMockRecorder) CreateProduct(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductRepo)(nil).CreateProduct), ctx, req)
+}
+
 // ListProduct mocks base method.
-func (m *MockProductRepo) ListProduct(ctx context.Context, req params.ProductQueryParams) ([]domain.Product, error) {
+func (m *MockProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProduct", ctx, req)
 	ret0, _ := ret[0].([]domain.Product)
@@ -58,7 +72,7 @@ func (mr *MockProductRepoMockRecorder) ListProduct(ctx, req any) *gomock.Call {
 }
 
 // TotalProduct mocks base method.
-func (m *MockProductRepo) TotalProduct(ctx context.Context, req params.ProductQueryParams) (int, error) {
+func (m *MockProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TotalProduct", ctx, req)
 	ret0, _ := ret[0].(int)

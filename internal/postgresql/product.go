@@ -28,7 +28,7 @@ func NewProductRepo(db *sql.DB, cache Cache) *ProductRepo {
 	return &ProductRepo{db, cache}
 }
 
-func (pr *ProductRepo) ListQuery(req params.ProductQueryParams) squirrel.SelectBuilder {
+func (pr *ProductRepo) ListQuery(req params.ListProductQueryParams) squirrel.SelectBuilder {
 	q := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).Select().From("products p")
 
 	if len(req.Search) != 0 {
@@ -46,7 +46,7 @@ func (pr *ProductRepo) ListQuery(req params.ProductQueryParams) squirrel.SelectB
 	return q
 }
 
-func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryParams) ([]domain.Product, error) {
+func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
 
 	q := pr.ListQuery(req).Columns("id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at")
 
@@ -103,7 +103,7 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryP
 	return products, nil
 }
 
-func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ProductQueryParams) (totalProducts int, err error) {
+func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams) (totalProducts int, err error) {
 	qCount := pr.ListQuery(req).Columns("count(id)")
 	qc, args, err := qCount.ToSql()
 	if err != nil {
@@ -115,4 +115,22 @@ func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ProductQuery
 	}
 
 	return
+}
+
+func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) error {
+	runInTx(ctx, pr.db, func(tx *sql.Tx) error {
+		qInsertProductType := `INSERT INTO product_types("name") VALUES($1) ON CONFLICT(name) DO NOTHING;`
+		if _, err := tx.ExecContext(ctx, qInsertProductType, req.Type); err != nil {
+			return err
+		}
+
+		qInsertProduct := `INSERT INTO products("name", quantity, price, product_type_name) VALUES($1, $2, $3, $4);`
+		if _, err := tx.ExecContext(ctx, qInsertProduct, req.Name, req.Quantity, req.Price, req.Type); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return nil
 }

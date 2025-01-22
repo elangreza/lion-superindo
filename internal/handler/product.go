@@ -9,7 +9,8 @@ import (
 )
 
 type ProductService interface {
-	ListProduct(ctx context.Context, args params.ProductQueryParams) (*params.ProductsResponse, error)
+	ListProduct(ctx context.Context, args params.ListProductQueryParams) (*params.ListProductResponses, error)
+	CreateProduct(ctx context.Context, req params.CreateProductRequest) error
 }
 
 // ProductHandler ...
@@ -26,7 +27,7 @@ func NewProductHandler(svc ProductService) *ProductHandler {
 
 func (ph *ProductHandler) ListProductHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		query := params.ProductQueryParams{}
+		query := params.ListProductQueryParams{}
 		err := c.BindQuery(&query)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
@@ -45,5 +46,28 @@ func (ph *ProductHandler) ListProductHandler() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, res)
+	}
+}
+
+func (ph *ProductHandler) CreateProductHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		body := params.CreateProductRequest{}
+		err := c.BindJSON(&body)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if err = body.Validate(); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if err := ph.svc.CreateProduct(c, body); err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		c.JSON(http.StatusCreated, nil)
 	}
 }
