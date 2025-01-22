@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 
 	"github.com/elangreza14/superindo/cmd/rest/config"
 	"github.com/elangreza14/superindo/internal/handler"
@@ -34,8 +35,7 @@ func main() {
 	productHandler := handler.NewProductHandler(productService)
 
 	srv := gin.New()
-	srv.GET("/products", productHandler.ListProductHandler())
-	srv.POST("/products", productHandler.CreateProductHandler())
+	srv.Match([]string{http.MethodPost, http.MethodGet}, "/product", productHandler.ProductHandler())
 	srv.Run(cfg.HTTP_PORT)
 }
 

@@ -68,7 +68,7 @@ func TestProductRepo_TotalProduct(t *testing.T) {
 	}
 }
 
-func TestProductRepo_CreateProduct(t *testing.T) {
+func TestProductRepo_CreateOrUpdateProduct(t *testing.T) {
 	db, mockSql, err := sqlmock.New()
 	if err != nil {
 		t.Error(err)
@@ -81,7 +81,7 @@ func TestProductRepo_CreateProduct(t *testing.T) {
 	mockSql.ExpectExec("INSERT INTO products").WithArgs("melon", 1, 1000, "buah").WillReturnResult(sqlmock.NewResult(1, 1))
 	mockSql.ExpectCommit()
 
-	err = pr.CreateProduct(context.Background(), params.CreateProductRequest{
+	err = pr.CreateOrUpdateProduct(context.Background(), params.CreateOrUpdateProductRequest{
 		Name:     "melon",
 		Quantity: 1,
 		Price:    1000,

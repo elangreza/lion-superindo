@@ -75,14 +75,14 @@ func (pqr *ListProductQueryParams) GetSortMapping() map[string]string {
 	return pqr.sortMap
 }
 
-type CreateProductRequest struct {
+type CreateOrUpdateProductRequest struct {
 	Name     string `json:"name"`
 	Quantity int    `json:"quantity"`
 	Price    int    `json:"price"`
 	Type     string `json:"type"`
 }
 
-func (pqr *CreateProductRequest) Validate() error {
+func (pqr *CreateOrUpdateProductRequest) Validate() error {
 	if len(pqr.Name) == 0 {
 		return errors.New("name cannot be empty")
 	}

@@ -11,10 +11,7 @@ type Config struct {
 	POSTGRES_PORT     string   `mapstructure:"POSTGRES_PORT"`
 	POSTGRES_DB       string   `mapstructure:"POSTGRES_DB"`
 	POSTGRES_SSL      string   `mapstructure:"POSTGRES_SSL"`
-	TRACE_DB          bool     `mapstructure:"TRACE_DB"`
-	TOKEN_SECRET      string   `mapstructure:"TOKEN_SECRET"`
 	ALLOWED_ORIGINS   []string `mapstructure:"ALLOWED_ORIGINS"`
-	BASE_URL          string   `mapstructure:"BASE_URL"`
 }
 
 func LoadConfig() (*Config, error) {
