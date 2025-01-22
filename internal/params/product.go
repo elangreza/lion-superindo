@@ -23,35 +23,42 @@ type ProductQueryParams struct {
 	Types []string `form:"types"`
 	// can be used with
 	// sort=updated_at:desc,price:asc,name:desc
-	Sort []string `form:"sort"`
+	Sorts   []string `form:"sorts"`
+	sortMap map[string]string
 }
 
 func (pqr *ProductQueryParams) Validate() error {
 	pqr.Search = strings.TrimSpace(pqr.Search)
 
-	for index, sortRaw := range pqr.Sort {
-		sortStr := strings.Split(sortRaw, ":")
-		if len(sortStr) != 2 {
-			return errors.New("not valid sort format")
-		}
+	if len(pqr.Sorts) > 0 {
+		pqr.sortMap = make(map[string]string)
+		for _, sortRaw := range pqr.Sorts {
+			sortStr := strings.Split(sortRaw, ":")
+			if len(sortStr) != 2 {
+				return errors.New("not valid sort format")
+			}
 
-		sortValue := sortStr[0]
-		if sortValue != "updated_at" &&
-			sortValue != "price" &&
-			sortValue != "name" {
-			return errors.New("not valid sort value")
-		}
+			sortValue := sortStr[0]
+			switch sortValue {
+			case "updated_at", "price", "name":
+			default:
+				return errors.New("not valid sort value")
+			}
 
-		sortDirection := sortStr[0]
-		if sortDirection != "ASC" &&
-			sortDirection != "DESC" &&
-			sortDirection != "asc" &&
-			sortDirection != "desc" {
-			return errors.New("not valid sort direction")
-		}
+			sortDirection := strings.ToLower(sortStr[1])
+			switch sortDirection {
+			case "asc", "desc":
+			default:
+				return errors.New("not valid sort direction")
+			}
 
-		pqr.Sort[index] = sortValue + " " + sortDirection
+			pqr.sortMap[sortValue] = sortDirection
+		}
 	}
 
 	return nil
+}
+
+func (pqr *ProductQueryParams) GetSortMapping() map[string]string {
+	return pqr.sortMap
 }

@@ -29,12 +29,12 @@ func (ph *ProductHandler) ListProductHandler() gin.HandlerFunc {
 		query := params.ProductQueryParams{}
 		err := c.BindQuery(&query)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, nil)
+			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		}
 
 		if err = query.Validate(); err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, nil)
+			c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 			return
 		}
 

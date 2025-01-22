@@ -36,8 +36,12 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ProductQueryP
 		q = q.Where(squirrel.Eq{"p.product_type_name": req.Types})
 	}
 
-	for _, sort := range req.Sort {
-		q = q.OrderBy(sort)
+	for key, direction := range req.GetSortMapping() {
+		if key == "updated_at" {
+			q = q.OrderBy("coalesce(p.updated_at, p.created_at)" + " " + direction)
+		} else {
+			q = q.OrderBy(key + " " + direction)
+		}
 	}
 
 	qr, args, err := q.ToSql()
