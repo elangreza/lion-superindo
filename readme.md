@@ -10,12 +10,14 @@ indo, dengan spesifikasi sebagai berikut :
 
 checkpoint
 
-- [x] Language : Golang
-- [x] Database : SQL / NoSQL + Seeder + migration
-- [ ] Cache : Redis untuk simpan total data nya
-- [ ] Dependency Injection : wire (Optional)
-- [ ] Unittest (Optional)
-- [x] Docker (Optional)
+- [ ] Unittest repo lengkapin aja
+- [ ] Unittest handler full
+- [ ] Cache : bikin interface set, get, flushall
+- [ ] Cache : Redis untuk simpan total data
+- [ ] Cache : Redis untuk simpan list data
+- [ ] response json global
 - [ ] Error handler
 - [ ] swagger
-- [ ] Docs
+- [ ] Docs md file
+- [ ] graceful shutdown postgres, redis, server
+- [ ] log

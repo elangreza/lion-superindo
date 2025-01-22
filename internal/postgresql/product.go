@@ -117,14 +117,17 @@ func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQ
 	return
 }
 
-func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) error {
+func (pr *ProductRepo) CreateOrUpdateProduct(ctx context.Context, req params.CreateOrUpdateProductRequest) error {
 	runInTx(ctx, pr.db, func(tx *sql.Tx) error {
 		qInsertProductType := `INSERT INTO product_types("name") VALUES($1) ON CONFLICT(name) DO NOTHING;`
 		if _, err := tx.ExecContext(ctx, qInsertProductType, req.Type); err != nil {
 			return err
 		}
 
-		qInsertProduct := `INSERT INTO products("name", quantity, price, product_type_name) VALUES($1, $2, $3, $4);`
+		qInsertProduct :=
+			`INSERT INTO products("name", quantity, price, product_type_name) VALUES($1, $2, $3, $4) 
+			ON CONFLICT(name) DO UPDATE SET 
+			quantity=products.quantity+$2, price = EXCLUDED.price, product_type_name = EXCLUDED.product_type_name;`
 		if _, err := tx.ExecContext(ctx, qInsertProduct, req.Name, req.Quantity, req.Price, req.Type); err != nil {
 			return err
 		}

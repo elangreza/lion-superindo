@@ -4,7 +4,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/elangreza14/superindo/internal/domain"
 	"github.com/elangreza14/superindo/internal/params"
@@ -14,7 +13,7 @@ type (
 	ProductRepo interface {
 		ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error)
 		TotalProduct(ctx context.Context, req params.ListProductQueryParams) (int, error)
-		CreateProduct(ctx context.Context, req params.CreateProductRequest) error
+		CreateOrUpdateProduct(ctx context.Context, req params.CreateOrUpdateProductRequest) error
 	}
 
 	ProductService struct {
@@ -72,14 +71,6 @@ func (ps *ProductService) ListProduct(ctx context.Context, req params.ListProduc
 	return &res, nil
 }
 
-func (ps *ProductService) CreateProduct(ctx context.Context, req params.CreateProductRequest) error {
-	totalProducts, err := ps.repo.TotalProduct(ctx, params.ListProductQueryParams{Search: req.Name})
-	if err != nil {
-		return err
-	}
-	if totalProducts > 0 {
-		return fmt.Errorf("product with name %s already exist", req.Name)
-	}
-
-	return ps.repo.CreateProduct(ctx, req)
+func (ps *ProductService) CreateOrUpdateProduct(ctx context.Context, req params.CreateOrUpdateProductRequest) error {
+	return ps.repo.CreateOrUpdateProduct(ctx, req)
 }
