@@ -97,7 +97,6 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops ...operati
 		signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 		<-s
 
-		fmt.Println("a")
 		slog.Info("shutting down")
 
 		ctx, cancel := context.WithTimeout(ctx, timeout)

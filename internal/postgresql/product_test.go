@@ -49,6 +49,9 @@ func TestProductRepo_ListProduct(t *testing.T) {
 	if err := mockSql.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
+	if err := mockRedis.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
 }
 
 func TestProductRepo_ListProduct_With_Cache_Is_Exist(t *testing.T) {
@@ -91,6 +94,9 @@ func TestProductRepo_ListProduct_With_Cache_Is_Exist(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, got)
 	if err := mockSql.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+	if err := mockRedis.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
@@ -145,17 +151,19 @@ func TestProductRepo_TotalProduct(t *testing.T) {
 }
 
 func TestProductRepo_CreateOrUpdateProduct(t *testing.T) {
-	db, mockSql, err := sqlmock.New()
+	dbSql, mockSql, err := sqlmock.New()
 	if err != nil {
 		t.Error(err)
 	}
-	defer db.Close()
-	pr := &ProductRepo{db, nil}
+	defer dbSql.Close()
+	dbRedis, mockRedis := redismock.NewClientMock()
+	pr := &ProductRepo{dbSql, dbRedis}
 
 	mockSql.ExpectBegin()
 	mockSql.ExpectExec("INSERT INTO product_types").WithArgs("buah").WillReturnResult(sqlmock.NewResult(1, 1))
 	mockSql.ExpectExec("INSERT INTO products").WithArgs("melon", 1, 1000, "buah").WillReturnResult(sqlmock.NewResult(1, 1))
 	mockSql.ExpectCommit()
+	mockRedis.ExpectFlushAll().SetVal("")
 
 	err = pr.CreateOrUpdateProduct(context.Background(), params.CreateOrUpdateProductRequest{
 		Name:     "melon",

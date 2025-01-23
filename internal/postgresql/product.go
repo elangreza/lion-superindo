@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -46,9 +46,9 @@ func (pr *ProductRepo) ListQuery(req params.ListProductQueryParams) squirrel.Sel
 
 func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) (products []domain.Product, err error) {
 	keyRaw := req.GetKey()
-	key := string(keyRaw)
+	key := "listProduct:" + string(keyRaw)
 
-	rcmd := pr.cache.Get(ctx, "listProduct:"+key)
+	rcmd := pr.cache.Get(ctx, key)
 	if err != nil && err != redis.Nil {
 		return
 	}
@@ -57,6 +57,7 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 		if err != nil {
 			return
 		}
+		slog.Info("using redis", "method", "ListProduct")
 		return
 	}
 
@@ -116,7 +117,7 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 	if err != nil {
 		return
 	}
-	err = pr.cache.Set(ctx, "listProduct:"+key, string(byteProducts), time.Second*60).Err()
+	err = pr.cache.Set(ctx, key, string(byteProducts), time.Second*60).Err()
 	if err != nil {
 		return
 	}
@@ -126,15 +127,16 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 
 func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams) (totalProducts int, err error) {
 	keyRaw := req.GetKey()
-	key := string(keyRaw)
-	fmt.Println(key)
+	key := "totalProduct:" + string(keyRaw)
 
-	rcmd := pr.cache.Get(ctx, "totalProduct:"+key)
+	rcmd := pr.cache.Get(ctx, key)
 	if rcmd.Val() != "" {
 		err = rcmd.Scan(&totalProducts)
 		if err != nil && err != redis.Nil {
 			return
 		}
+
+		slog.Info("using redis", "method", "TotalProduct")
 		return
 	}
 
@@ -148,8 +150,7 @@ func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQ
 		return
 	}
 
-	err = pr.cache.Set(ctx, "totalProduct:"+key, totalProducts, time.Second*60).Err()
-	if err != nil {
+	if err = pr.cache.Set(ctx, key, totalProducts, time.Second*60).Err(); err != nil {
 		return
 	}
 
@@ -174,5 +175,5 @@ func (pr *ProductRepo) CreateOrUpdateProduct(ctx context.Context, req params.Cre
 		return nil
 	})
 
-	return nil
+	return pr.cache.FlushAll(ctx).Err()
 }
