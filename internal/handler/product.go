@@ -16,7 +16,7 @@ import (
 type (
 	ProductService interface {
 		ListProduct(ctx context.Context, args params.ListProductQueryParams) (*params.ListProductResponses, error)
-		CreateOrUpdateProduct(ctx context.Context, req params.CreateOrUpdateProductRequest) error
+		CreateProduct(ctx context.Context, req params.CreateProductRequest) (*params.CreateProductResponse, error)
 	}
 
 	ProductHandler struct {
@@ -66,8 +66,8 @@ func (ph *ProductHandler) ListProductHandler(w http.ResponseWriter, r *http.Requ
 	Success(w, http.StatusOK, res)
 }
 
-func (ph *ProductHandler) CreateOrUpdateProductHandler(w http.ResponseWriter, r *http.Request) {
-	body := params.CreateOrUpdateProductRequest{}
+func (ph *ProductHandler) CreateProductHandler(w http.ResponseWriter, r *http.Request) {
+	body := params.CreateProductRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		Error(w, http.StatusBadRequest, err)
 		return
@@ -78,13 +78,18 @@ func (ph *ProductHandler) CreateOrUpdateProductHandler(w http.ResponseWriter, r 
 		return
 	}
 
-	if err := ph.svc.CreateOrUpdateProduct(r.Context(), body); err != nil {
+	res, err := ph.svc.CreateProduct(r.Context(), body)
+	if err != nil {
 		slog.Error("controller", "service", err.Error())
+		if err.Error() == "product already exist" {
+			Error(w, http.StatusConflict, errors.New("product already exist"))
+			return
+		}
 		Error(w, http.StatusInternalServerError, errors.New("server error"))
 		return
 	}
 
-	Success(w, http.StatusOK, nil)
+	Success(w, http.StatusCreated, res)
 }
 
 func (ph *ProductHandler) ProductHandler(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +97,7 @@ func (ph *ProductHandler) ProductHandler(w http.ResponseWriter, r *http.Request)
 	case http.MethodGet:
 		ph.ListProductHandler(w, r)
 	case http.MethodPost:
-		ph.CreateOrUpdateProductHandler(w, r)
+		ph.CreateProductHandler(w, r)
 	default:
 		Error(w, http.StatusMethodNotAllowed, errors.New("invalid method"))
 	}

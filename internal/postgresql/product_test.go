@@ -24,10 +24,9 @@ func TestProductRepo_ListProduct(t *testing.T) {
 	now := time.Now()
 	products := []domain.Product{
 		{
-			ID:       1,
-			Name:     "test",
-			Quantity: 1,
-			Price:    1,
+			ID:    1,
+			Name:  "test",
+			Price: 1,
 			ProductType: domain.ProductTypes{
 				Name:     "test",
 				BaseDate: domain.BaseDate{},
@@ -66,10 +65,9 @@ func TestProductRepo_ListProduct_With_Cache_Is_Exist(t *testing.T) {
 
 	products := []domain.Product{
 		{
-			ID:       1,
-			Name:     "test",
-			Quantity: 1,
-			Price:    1,
+			ID:    1,
+			Name:  "test",
+			Price: 1,
 			ProductType: domain.ProductTypes{
 				Name:     "test",
 				BaseDate: domain.BaseDate{},
@@ -84,8 +82,8 @@ func TestProductRepo_ListProduct_With_Cache_Is_Exist(t *testing.T) {
 
 	mockRedis.ExpectGet("listProduct:").RedisNil()
 	rows := sqlmock.
-		NewRows([]string{"id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at"}).
-		AddRow(1, "test", 1, 1, "test", now, nil)
+		NewRows([]string{"id", "name", "price", "product_type_name", "created_at", "updated_at"}).
+		AddRow(1, "test", 1, "test", now, nil)
 	mockSql.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
 	mockRedis.ExpectSet("listProduct:", string(productJson), time.Second*60).SetVal(string(productJson))
 
@@ -112,7 +110,7 @@ func TestProductRepo_TotalProduct_With_Cache_Is_Exist(t *testing.T) {
 
 	mockRedis.ExpectGet("totalProduct:").SetVal("1")
 
-	got, err := pr.TotalProduct(context.Background(), params.ListProductQueryParams{Limit: 1})
+	got, err := pr.TotalProduct(context.Background(), params.ListProductQueryParams{Limit: 1}, true)
 	assert.NotNil(t, pr)
 	assert.NoError(t, err)
 	assert.Equal(t, got, int(1))
@@ -138,7 +136,7 @@ func TestProductRepo_TotalProduct(t *testing.T) {
 	mockSql.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
 	mockRedis.ExpectSet("totalProduct:", 1, time.Second*60).SetVal("1")
 
-	got, err := pr.TotalProduct(context.Background(), params.ListProductQueryParams{Limit: 1})
+	got, err := pr.TotalProduct(context.Background(), params.ListProductQueryParams{Limit: 1}, true)
 	assert.NotNil(t, pr)
 	assert.NoError(t, err)
 	assert.Equal(t, got, int(1))
@@ -150,7 +148,7 @@ func TestProductRepo_TotalProduct(t *testing.T) {
 	}
 }
 
-func TestProductRepo_CreateOrUpdateProduct(t *testing.T) {
+func TestProductRepo_CreateProduct(t *testing.T) {
 	dbSql, mockSql, err := sqlmock.New()
 	if err != nil {
 		t.Error(err)
@@ -161,18 +159,18 @@ func TestProductRepo_CreateOrUpdateProduct(t *testing.T) {
 
 	mockSql.ExpectBegin()
 	mockSql.ExpectExec("INSERT INTO product_types").WithArgs("buah").WillReturnResult(sqlmock.NewResult(1, 1))
-	mockSql.ExpectExec("INSERT INTO products").WithArgs("melon", 1, 1000, "buah").WillReturnResult(sqlmock.NewResult(1, 1))
+	mockSql.ExpectQuery("INSERT INTO products").WithArgs("melon", 1000, "buah").WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(5))
 	mockSql.ExpectCommit()
 	mockRedis.ExpectFlushAll().SetVal("")
 
-	err = pr.CreateOrUpdateProduct(context.Background(), params.CreateOrUpdateProductRequest{
-		Name:     "melon",
-		Quantity: 1,
-		Price:    1000,
-		Type:     "buah",
+	id, err := pr.CreateProduct(context.Background(), params.CreateProductRequest{
+		Name:  "melon",
+		Price: 1000,
+		Type:  "buah",
 	})
 	assert.NoError(t, err)
 	if err := mockSql.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
+	assert.Equal(t, id, 5)
 }

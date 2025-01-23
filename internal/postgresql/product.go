@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -61,7 +62,7 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 		return
 	}
 
-	q := pr.ListQuery(req).Columns("id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at")
+	q := pr.ListQuery(req).Columns("id", "name", "price", "product_type_name", "created_at", "updated_at")
 
 	if req.GetSortMapping() != nil {
 		for key, direction := range req.GetSortMapping() {
@@ -97,7 +98,6 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 		err := rows.Scan(
 			&product.ID,
 			&product.Name,
-			&product.Quantity,
 			&product.Price,
 			&product.ProductType.Name,
 			&product.CreatedAt,
@@ -125,19 +125,21 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 	return products, nil
 }
 
-func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams) (totalProducts int, err error) {
+func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams, withCache bool) (totalProducts int, err error) {
 	keyRaw := req.GetKey()
 	key := "totalProduct:" + string(keyRaw)
 
-	rcmd := pr.cache.Get(ctx, key)
-	if rcmd.Val() != "" {
-		err = rcmd.Scan(&totalProducts)
-		if err != nil && err != redis.Nil {
+	if withCache {
+		rcmd := pr.cache.Get(ctx, key)
+		if rcmd.Val() != "" {
+			err = rcmd.Scan(&totalProducts)
+			if err != nil && err != redis.Nil {
+				return
+			}
+
+			slog.Info("using redis", "method", "TotalProduct")
 			return
 		}
-
-		slog.Info("using redis", "method", "TotalProduct")
-		return
 	}
 
 	qCount := pr.ListQuery(req).Columns("count(id)")
@@ -150,30 +152,44 @@ func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQ
 		return
 	}
 
-	if err = pr.cache.Set(ctx, key, totalProducts, time.Second*60).Err(); err != nil {
-		return
+	if withCache {
+		if err = pr.cache.Set(ctx, key, totalProducts, time.Second*60).Err(); err != nil {
+			return
+		}
 	}
 
 	return
 }
 
-func (pr *ProductRepo) CreateOrUpdateProduct(ctx context.Context, req params.CreateOrUpdateProductRequest) error {
-	runInTx(ctx, pr.db, func(tx *sql.Tx) error {
+func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) (id int, err error) {
+
+	// id := 0
+	err = runInTx(ctx, pr.db, func(tx *sql.Tx) error {
 		qInsertProductType := `INSERT INTO product_types("name") VALUES($1) ON CONFLICT(name) DO NOTHING;`
 		if _, err := tx.ExecContext(ctx, qInsertProductType, req.Type); err != nil {
 			return err
 		}
 
 		qInsertProduct :=
-			`INSERT INTO products("name", quantity, price, product_type_name) VALUES($1, $2, $3, $4) 
-			ON CONFLICT(name) DO UPDATE SET 
-			quantity=products.quantity+$2, price = EXCLUDED.price, product_type_name = EXCLUDED.product_type_name;`
-		if _, err := tx.ExecContext(ctx, qInsertProduct, req.Name, req.Quantity, req.Price, req.Type); err != nil {
+			`INSERT INTO products("name", price, product_type_name) VALUES($1, $2, $3) RETURNING id;`
+		if err := tx.QueryRowContext(ctx, qInsertProduct, req.Name, req.Price, req.Type).Scan(&id); err != nil {
+			fmt.Println(err)
+
 			return err
 		}
 
+		fmt.Println("a", id)
+
 		return nil
 	})
+	if err != nil {
+		return
+	}
 
-	return pr.cache.FlushAll(ctx).Err()
+	if err = pr.cache.FlushAll(ctx).Err(); err != nil {
+		return
+	}
+
+	fmt.Println("b", id)
+	return
 }

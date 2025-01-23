@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -99,7 +100,6 @@ func TestProductHandler_ListProductHandler_Success(t *testing.T) {
 			{
 				ID:       1,
 				Name:     "semangka",
-				Quantity: 1,
 				Price:    1,
 				Type:     "buah",
 				UpdateAt: time.Now(),
@@ -128,17 +128,16 @@ func TestProductHandler_ListProductHandler_Success(t *testing.T) {
 	assert.Equal(t, len(resBody.Data.Products), 1)
 }
 
-func TestProductHandler_CreateOrUpdateProductHandler(t *testing.T) {
+func TestProductHandler_CreateProductHandler_Error_When_Validate_Query(t *testing.T) {
 	mc := gomock.NewController(t)
 	mockProductService := mockhandler.NewMockProductService(mc)
 	ph := NewProductHandler(mockProductService)
 	routes := NewRoutes(ph)
 
-	reqBody := params.CreateOrUpdateProductRequest{
-		Name:     "a",
-		Quantity: -1,
-		Price:    1,
-		Type:     "a",
+	reqBody := params.CreateProductRequest{
+		Name:  "a",
+		Price: -1,
+		Type:  "a",
 	}
 	errPayload, _ := json.Marshal(reqBody)
 	bodyReader := bytes.NewReader(errPayload)
@@ -156,25 +155,24 @@ func TestProductHandler_CreateOrUpdateProductHandler(t *testing.T) {
 	resBody := mockErrorResBody
 	err = json.Unmarshal(body, &resBody)
 	assert.NoError(t, err)
-	assert.Equal(t, resBody.Error, "quantity cannot be negative")
+	assert.Equal(t, resBody.Error, "price cannot be negative")
 }
 
-func TestProductHandler_CreateOrUpdateProductHandler_Error_When_Processing_CreateOrUpdateProduct(t *testing.T) {
+func TestProductHandler_CreateProductHandler_Error_When_Processing_CreateProduct(t *testing.T) {
 	mc := gomock.NewController(t)
 	mockProductService := mockhandler.NewMockProductService(mc)
 	ph := NewProductHandler(mockProductService)
 	routes := NewRoutes(ph)
 
-	reqBody := params.CreateOrUpdateProductRequest{
-		Name:     "a",
-		Quantity: 1,
-		Price:    1,
-		Type:     "a",
+	reqBody := params.CreateProductRequest{
+		Name:  "a",
+		Price: 1,
+		Type:  "a",
 	}
 	errPayload, _ := json.Marshal(reqBody)
 	bodyReader := bytes.NewReader(errPayload)
 
-	mockProductService.EXPECT().CreateOrUpdateProduct(gomock.Any(), gomock.Any()).Return(errors.New("test"))
+	mockProductService.EXPECT().CreateProduct(gomock.Any(), gomock.Any()).Return(nil, errors.New("test"))
 
 	r := httptest.NewRequest(http.MethodPost, "/product", bodyReader)
 	w := httptest.NewRecorder()
@@ -192,22 +190,23 @@ func TestProductHandler_CreateOrUpdateProductHandler_Error_When_Processing_Creat
 	assert.Equal(t, resBody.Error, "server error")
 }
 
-func TestProductHandler_CreateOrUpdateProductHandler_Success(t *testing.T) {
+func TestProductHandler_CreateProductHandler_Success(t *testing.T) {
 	mc := gomock.NewController(t)
 	mockProductService := mockhandler.NewMockProductService(mc)
 	ph := NewProductHandler(mockProductService)
 	routes := NewRoutes(ph)
 
-	reqBody := params.CreateOrUpdateProductRequest{
-		Name:     "a",
-		Quantity: 1,
-		Price:    1,
-		Type:     "a",
+	reqBody := params.CreateProductRequest{
+		Name:  "a",
+		Price: 1,
+		Type:  "a",
 	}
 	errPayload, _ := json.Marshal(reqBody)
 	bodyReader := bytes.NewReader(errPayload)
 
-	mockProductService.EXPECT().CreateOrUpdateProduct(gomock.Any(), gomock.Any()).Return(nil)
+	mockProductService.EXPECT().CreateProduct(gomock.Any(), gomock.Any()).Return(&params.CreateProductResponse{
+		ID: 1,
+	}, nil)
 
 	r := httptest.NewRequest(http.MethodPost, "/product", bodyReader)
 	w := httptest.NewRecorder()
@@ -215,8 +214,17 @@ func TestProductHandler_CreateOrUpdateProductHandler_Success(t *testing.T) {
 
 	res := w.Result()
 	defer res.Body.Close()
-	_, err := io.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, http.StatusCreated, res.StatusCode)
+	fmt.Println(string(body))
+
+	resBodya := struct {
+		Data params.CreateProductResponse `json:"data"`
+	}{}
+	err = json.Unmarshal(body, &resBodya)
+	fmt.Printf("%+v", resBodya)
+	assert.NoError(t, err)
+	assert.Equal(t, resBodya.Data.ID, int(1))
 
 }

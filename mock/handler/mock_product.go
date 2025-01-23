@@ -41,18 +41,19 @@ func (m *MockProductService) EXPECT() *MockProductServiceMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdateProduct mocks base method.
-func (m *MockProductService) CreateOrUpdateProduct(ctx context.Context, req params.CreateOrUpdateProductRequest) error {
+// CreateProduct mocks base method.
+func (m *MockProductService) CreateProduct(ctx context.Context, req params.CreateProductRequest) (*params.CreateProductResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOrUpdateProduct", ctx, req)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "CreateProduct", ctx, req)
+	ret0, _ := ret[0].(*params.CreateProductResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// CreateOrUpdateProduct indicates an expected call of CreateOrUpdateProduct.
-func (mr *MockProductServiceMockRecorder) CreateOrUpdateProduct(ctx, req any) *gomock.Call {
+// CreateProduct indicates an expected call of CreateProduct.
+func (mr *MockProductServiceMockRecorder) CreateProduct(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateProduct", reflect.TypeOf((*MockProductService)(nil).CreateOrUpdateProduct), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductService)(nil).CreateProduct), ctx, req)
 }
 
 // ListProduct mocks base method.

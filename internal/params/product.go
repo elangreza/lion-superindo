@@ -10,7 +10,6 @@ import (
 type ProductResponse struct {
 	ID       int       `json:"id"`
 	Name     string    `json:"name"`
-	Quantity int       `json:"quantity"`
 	Price    int       `json:"price"`
 	Type     string    `json:"type"`
 	UpdateAt time.Time `json:"updated_at"`
@@ -89,14 +88,17 @@ func (pqr *ListProductQueryParams) GetKey() string {
 	return pqr.key
 }
 
-type CreateOrUpdateProductRequest struct {
-	Name     string `json:"name"`
-	Quantity int    `json:"quantity"`
-	Price    int    `json:"price"`
-	Type     string `json:"type"`
+type CreateProductRequest struct {
+	Name  string `json:"name"`
+	Price int    `json:"price"`
+	Type  string `json:"type"`
 }
 
-func (pqr *CreateOrUpdateProductRequest) Validate() error {
+type CreateProductResponse struct {
+	ID int `json:"id"`
+}
+
+func (pqr *CreateProductRequest) Validate() error {
 	if len(pqr.Name) == 0 {
 		return errors.New("name cannot be empty")
 	}
@@ -105,10 +107,6 @@ func (pqr *CreateOrUpdateProductRequest) Validate() error {
 		return errors.New("type cannot be empty")
 	}
 	pqr.Type = strings.ToLower(pqr.Type)
-
-	if pqr.Quantity < 0 {
-		return errors.New("quantity cannot be negative")
-	}
 
 	if pqr.Price < 0 {
 		return errors.New("price cannot be negative")

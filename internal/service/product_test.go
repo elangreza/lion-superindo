@@ -39,7 +39,7 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 	suite.Run("error when getting total of product", func() {
 		req := params.ListProductQueryParams{}
 		ctx := context.Background()
-		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req).Return(0, errors.New("test"))
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req, true).Return(0, errors.New("test"))
 
 		got, err := suite.Ps.ListProduct(ctx, req)
 		suite.Error(err)
@@ -49,7 +49,7 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 	suite.Run("got total products with 0 data", func() {
 		req := params.ListProductQueryParams{}
 		ctx := context.Background()
-		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req).Return(0, nil)
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req, true).Return(0, nil)
 
 		got, err := suite.Ps.ListProduct(ctx, req)
 		suite.NoError(err)
@@ -62,7 +62,7 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 	suite.Run("error when getting list of product", func() {
 		req := params.ListProductQueryParams{}
 		ctx := context.Background()
-		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req).Return(1, nil)
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req, true).Return(1, nil)
 		suite.MockProductRepo.EXPECT().ListProduct(ctx, req).Return(nil, errors.New("test"))
 
 		got, err := suite.Ps.ListProduct(ctx, req)
@@ -73,7 +73,7 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 	suite.Run("error when getting list of product", func() {
 		req := params.ListProductQueryParams{}
 		ctx := context.Background()
-		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req).Return(1, nil)
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req, true).Return(1, nil)
 		suite.MockProductRepo.EXPECT().ListProduct(ctx, req).Return(nil, errors.New("test"))
 
 		got, err := suite.Ps.ListProduct(ctx, req)
@@ -84,7 +84,7 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 	suite.Run("success with limit 2 and total products is 3", func() {
 		req := params.ListProductQueryParams{Limit: 2}
 		ctx := context.Background()
-		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req).Return(3, nil)
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req, true).Return(3, nil)
 		suite.MockProductRepo.EXPECT().ListProduct(ctx, req).Return([]domain.Product{
 			{
 				ID:       1,
@@ -109,7 +109,7 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 		updatedAt := time.Now()
 		req := params.ListProductQueryParams{Limit: 2}
 		ctx := context.Background()
-		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req).Return(2, nil)
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, req, true).Return(2, nil)
 		suite.MockProductRepo.EXPECT().ListProduct(ctx, req).Return([]domain.Product{
 			{
 				ID:       1,
@@ -128,13 +128,52 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 	})
 }
 
-func (suite *TestProductServiceSuite) TestProductService_CreateOrUpdateProduct() {
-	suite.Run("create product", func() {
-		req := params.CreateOrUpdateProductRequest{Name: "melon"}
+func (suite *TestProductServiceSuite) TestProductService_CreateProduct() {
+	suite.Run("error when getting product", func() {
+		req := params.CreateProductRequest{Name: "melon"}
 		ctx := context.Background()
-		suite.MockProductRepo.EXPECT().CreateOrUpdateProduct(ctx, req).Return(nil)
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, params.ListProductQueryParams{
+			Search: "melon",
+		}, false).Return(0, errors.New("test"))
 
-		err := suite.Ps.CreateOrUpdateProduct(ctx, req)
-		suite.NoError(err)
+		_, err := suite.Ps.CreateProduct(ctx, req)
+		suite.Error(err)
 	})
+	suite.Run("product already exist", func() {
+		req := params.CreateProductRequest{Name: "melon"}
+		ctx := context.Background()
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, params.ListProductQueryParams{
+			Search: "melon",
+		}, false).Return(1, nil)
+
+		_, err := suite.Ps.CreateProduct(ctx, req)
+		suite.Error(err)
+	})
+
+	suite.Run("error when create", func() {
+		req := params.CreateProductRequest{Name: "melon"}
+		ctx := context.Background()
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, params.ListProductQueryParams{
+			Search: "melon",
+		}, false).Return(0, nil)
+		suite.MockProductRepo.EXPECT().CreateProduct(ctx, req).Return(0, errors.New("test"))
+
+		_, err := suite.Ps.CreateProduct(ctx, req)
+		suite.Error(err)
+	})
+
+	suite.Run("create product", func() {
+		req := params.CreateProductRequest{Name: "melon"}
+		ctx := context.Background()
+		suite.MockProductRepo.EXPECT().TotalProduct(ctx, params.ListProductQueryParams{
+			Search: "melon",
+		}, false).Return(0, nil)
+		suite.MockProductRepo.EXPECT().CreateProduct(ctx, req).Return(6, nil)
+
+		res, err := suite.Ps.CreateProduct(ctx, req)
+		suite.NoError(err)
+		suite.NotNil(res)
+		suite.Equal(res.ID, 6)
+	})
+
 }

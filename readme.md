@@ -15,10 +15,9 @@ checkpoint
 - [x] Error handler
 - [x] graceful shutdown postgres, redis, server
 - [x] log
+- [x] Unittest repo lengkapin aja
+- [x] Cache : bikin interface set, get, flushall
+- [x] Cache : Redis untuk simpan total data
+- [x] Cache : Redis untuk simpan list data
 
-- [ ] Unittest repo lengkapin aja
-- [ ] Cache : bikin interface set, get, flushall
-- [ ] Cache : Redis untuk simpan total data
-- [ ] Cache : Redis untuk simpan list data
-- [ ] swagger
 - [ ] Docs md file

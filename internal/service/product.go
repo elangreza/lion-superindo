@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/elangreza14/superindo/internal/domain"
 	"github.com/elangreza14/superindo/internal/params"
@@ -12,8 +13,8 @@ import (
 type (
 	ProductRepo interface {
 		ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error)
-		TotalProduct(ctx context.Context, req params.ListProductQueryParams) (int, error)
-		CreateOrUpdateProduct(ctx context.Context, req params.CreateOrUpdateProductRequest) error
+		TotalProduct(ctx context.Context, req params.ListProductQueryParams, withCache bool) (int, error)
+		CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error)
 	}
 
 	ProductService struct {
@@ -28,7 +29,7 @@ func NewProductService(repo ProductRepo) *ProductService {
 }
 
 func (ps *ProductService) ListProduct(ctx context.Context, req params.ListProductQueryParams) (*params.ListProductResponses, error) {
-	totalProducts, err := ps.repo.TotalProduct(ctx, req)
+	totalProducts, err := ps.repo.TotalProduct(ctx, req, true)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +62,6 @@ func (ps *ProductService) ListProduct(ctx context.Context, req params.ListProduc
 			params.ProductResponse{
 				ID:       product.ID,
 				Name:     product.Name,
-				Quantity: product.Quantity,
 				Price:    product.Price,
 				Type:     product.ProductType.Name,
 				UpdateAt: updatedAt,
@@ -71,6 +71,20 @@ func (ps *ProductService) ListProduct(ctx context.Context, req params.ListProduc
 	return &res, nil
 }
 
-func (ps *ProductService) CreateOrUpdateProduct(ctx context.Context, req params.CreateOrUpdateProductRequest) error {
-	return ps.repo.CreateOrUpdateProduct(ctx, req)
+func (ps *ProductService) CreateProduct(ctx context.Context, req params.CreateProductRequest) (*params.CreateProductResponse, error) {
+	products, err := ps.repo.TotalProduct(ctx, params.ListProductQueryParams{Search: req.Name}, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if products > 0 {
+		return nil, errors.New("product already exist")
+	}
+
+	id, err := ps.repo.CreateProduct(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &params.CreateProductResponse{ID: id}, nil
 }
