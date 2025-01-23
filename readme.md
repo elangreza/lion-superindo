@@ -52,7 +52,7 @@ indo, dengan spesifikasi sebagai berikut :
 
     - method **GET** is used for retrieving list of product. This method can combined with query params with 5 possible values
 
-      1. search
+      1. **search**
          is used for searching by id or name
 
          example
@@ -61,42 +61,35 @@ indo, dengan spesifikasi sebagai berikut :
          /product?search=semangka
          ```
 
-      2. sorts
-         is used for sorting the data, can be used only for name, price, and type. The for mat of sorts is `key` + ":" + `asc` or `key` + ":" + `desc`
-
-         example
+      2. **sorts**
+         is used for sorting the data, can be used only for _name_, _price_, and _updated_at_. The format of sorts is `key` + ":" + `asc` or `key` + ":" + `desc`. Take a look at this example
 
          ```
          /product?sorts=updated_at:asc&sorts=name:desc&sorts=price:asc
          ```
 
-      3. types
-         is used for filtering the data, can be used with the value of product types
-
-         example
+      3. **types**
+         is used for filtering the data, can be used with the value of product types. Take a look at this example
 
          ```
          /product?types=buah&types=snack
          ```
 
-      4. page
-         is used for splitting the data with page
-
-         example
+      4. **page**
+         is used for splitting the data with page. Take a look at this example
 
          ```
          /product?page=1
          ```
 
-      5. limit
-         is used for limiting the data each page
-         example
+      5. **limit**
+         is used for limiting the data each page. Take a look at this example
 
          ```
          /product?page=1
          ```
 
-      and the response will be
+      and the response will be like this and status is **200**
 
       ```json
       {
@@ -113,7 +106,7 @@ indo, dengan spesifikasi sebagai berikut :
             },
             {
               "id": 167,
-              "name": "kopi aDasaassa",
+              "name": "kopi Arabica",
               "price": 10000,
               "type": "snack",
               "updated_at": "2025-01-23T10:39:33.187086Z"
