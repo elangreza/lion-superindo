@@ -20,7 +20,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/http/.
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/rest/.
 
 # Start a new stage from scratch
 FROM alpine:latest
@@ -31,7 +31,7 @@ WORKDIR /root/
 # Copy the Pre-built binary file from the previous stage. Observe we also copied the .env file
 COPY --from=builder /app/main .
 COPY --from=builder /app/.env .       
-COPY --from=builder /app/migrations .       
+COPY --from=builder /app/db/migration .       
 
 # Expose port 8080 to the outside world
 EXPOSE 8080

@@ -1,6 +1,7 @@
 version: "3.2"
 services:
   database:
+    container_name: superindo-database
     image: postgres:alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -28,41 +29,41 @@ services:
       - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
       - superindo
-  # migrate:
-  #   image: migrate/migrate
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - superindo
-  #   volumes:
-  #     - ./migrations:/migrations
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #       restart: true
-  #   command:
-  #     [
-  #       "-path",
-  #       "./migrations",
-  #       "-database",
-  #       "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL}",
-  #       "up",
-  #     ]
-  # app:
-  #   networks:
-  #     - superindo
-  #   ports:
-  #     - "8080:8080"
-  #   build: .
-  #   container_name: app
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #       restart: true
-  #     redis:
-  #       condition: service_started
+  migrate:
+    image: migrate/migrate
+    env_file:
+      - .env
+    networks:
+      - superindo
+    volumes:
+      - ./db/migration:/migration
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+    command:
+      [
+        "-path",
+        "./migration",
+        "-database",
+        "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@superindo-database:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${POSTGRES_SSL}",
+        "up",
+      ]
+  app:
+    networks:
+      - superindo
+    ports:
+      - "8080:8080"
+    build: .
+    container_name: superindoapp
+    env_file:
+      - .env
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_started
 networks:
   superindo:
     driver: bridge

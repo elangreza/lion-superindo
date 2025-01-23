@@ -31,7 +31,7 @@ func main() {
 	defer dbPool.Close()
 
 	redisPool := redis.NewClient(&redis.Options{
-		Addr: "localhost:" + cfg.REDIS_PORT,
+		Addr: cfg.REDIS_ADDRESS,
 	})
 
 	productRepo := postgresql.NewProductRepo(dbPool, redisPool)

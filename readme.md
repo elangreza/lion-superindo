@@ -18,7 +18,45 @@ indo, dengan spesifikasi sebagai berikut :
 - [x] Unittest (Optional)
 - [x] Docker (Optional)
 
-## Documentation
+## How to run the Application
+
+1. copy env file
+
+   ```sh
+   cp ./env.example .env
+   ```
+
+2. build docker file
+
+   ```sh
+   make up
+   ```
+
+3. run the seed migration
+
+   ```sh
+   cat ./db/seed/seed_1.sql | docker exec -i superindo-database psql -h localhost -U superindo -f-
+   ```
+
+4. try with adding product
+
+   ```curl
+   curl --location 'http://localhost:8080/product' \
+   --header 'Content-Type: application/json' \
+   --data '{
+       "name":"kopi luwak",
+       "type":"Snack",
+       "price":10000
+   }'
+   ```
+
+5. try with getting products
+
+   ```curl
+   curl --location 'http://localhost:8080/product?sorts=updated_at%3Aasc&sorts=name%3Adesc&page=1&limit=10&sorts=price%3Aasc'
+   ```
+
+## API Documentation
 
 1.  `/product` API
 
