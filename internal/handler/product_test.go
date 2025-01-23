@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -217,13 +216,11 @@ func TestProductHandler_CreateProductHandler_Success(t *testing.T) {
 	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
-	fmt.Println(string(body))
 
 	resBodya := struct {
 		Data params.CreateProductResponse `json:"data"`
 	}{}
 	err = json.Unmarshal(body, &resBodya)
-	fmt.Printf("%+v", resBodya)
 	assert.NoError(t, err)
 	assert.Equal(t, resBodya.Data.ID, int(1))
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -173,12 +172,8 @@ func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProdu
 		qInsertProduct :=
 			`INSERT INTO products("name", price, product_type_name) VALUES($1, $2, $3) RETURNING id;`
 		if err := tx.QueryRowContext(ctx, qInsertProduct, req.Name, req.Price, req.Type).Scan(&id); err != nil {
-			fmt.Println(err)
-
 			return err
 		}
-
-		fmt.Println("a", id)
 
 		return nil
 	})
@@ -190,6 +185,5 @@ func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProdu
 		return
 	}
 
-	fmt.Println("b", id)
 	return
 }

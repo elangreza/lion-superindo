@@ -12,6 +12,7 @@ type Config struct {
 	POSTGRES_DB       string   `mapstructure:"POSTGRES_DB"`
 	POSTGRES_SSL      string   `mapstructure:"POSTGRES_SSL"`
 	ALLOWED_ORIGINS   []string `mapstructure:"ALLOWED_ORIGINS"`
+	REDIS_PORT        string   `mapstructure:"REDIS_PORT"`
 }
 
 func LoadConfig() (*Config, error) {
