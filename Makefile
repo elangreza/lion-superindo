@@ -26,4 +26,7 @@ up:
 down:
 	docker compose down
 
-.PHONY: migrate migrate-create run-http gen up down
+seed:
+	cat ./db/seed/seed_1.sql | docker exec -i superindo-database psql -h localhost -U superindo -f-
+
+.PHONY: migrate migrate-create run-http gen up down seed

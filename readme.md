@@ -35,7 +35,13 @@ indo, dengan spesifikasi sebagai berikut :
 3. run the seed migration
 
    ```sh
-   cat ./db/seed/seed_1.sql | docker exec -i superindo-database psql -h localhost -U superindo -f-
+   make seed
+   ```
+
+   if only the **seed is failed** or **table is not created yet**, run this command
+
+   ```sh
+   docker restart superindo-migrate
    ```
 
 4. try with adding product

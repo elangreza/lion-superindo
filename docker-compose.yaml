@@ -30,6 +30,7 @@ services:
     networks:
       - superindo
   migrate:
+    container_name: superindo-migrate
     image: migrate/migrate
     env_file:
       - .env
