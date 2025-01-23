@@ -218,4 +218,5 @@ func TestProductHandler_CreateOrUpdateProductHandler_Success(t *testing.T) {
 	_, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
+
 }

@@ -1,30 +1,28 @@
 package postgresql
 
-//go:generate mockgen -source $GOFILE -destination ../../mock/postgresql/mock_$GOFILE -package mock$GOPACKAGE
-
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/elangreza14/superindo/internal/domain"
 	"github.com/elangreza14/superindo/internal/params"
+	"github.com/redis/go-redis/v9"
 )
 
 type (
-	Cache interface {
-		Set(key string, Value any) error
-	}
-
 	ProductRepo struct {
 		db    *sql.DB
-		cache Cache
+		cache *redis.Client
 	}
 )
 
-func NewProductRepo(db *sql.DB, cache Cache) *ProductRepo {
+func NewProductRepo(db *sql.DB, cache *redis.Client) *ProductRepo {
 	return &ProductRepo{db, cache}
 }
 
@@ -46,7 +44,21 @@ func (pr *ProductRepo) ListQuery(req params.ListProductQueryParams) squirrel.Sel
 	return q
 }
 
-func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
+func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) (products []domain.Product, err error) {
+	keyRaw := req.GetKey()
+	key := string(keyRaw)
+
+	rcmd := pr.cache.Get(ctx, "listProduct:"+key)
+	if err != nil && err != redis.Nil {
+		return
+	}
+	if rcmd.Val() != "" {
+		err = json.Unmarshal([]byte(rcmd.Val()), &products)
+		if err != nil {
+			return
+		}
+		return
+	}
 
 	q := pr.ListQuery(req).Columns("id", "name", "quantity", "price", "product_type_name", "created_at", "updated_at")
 
@@ -64,7 +76,7 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 
 	q = q.Limit(uint64(req.Limit))
 	if req.Page > 1 {
-		q = q.Offset(req.Limit * (req.Page - 1))
+		q = q.Offset(uint64(req.Limit * (req.Page - 1)))
 	}
 
 	qr, args, err := q.ToSql()
@@ -78,7 +90,7 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 	}
 	defer rows.Close()
 
-	products := []domain.Product{}
+	// products := []domain.Product{}
 	for rows.Next() {
 		product := domain.Product{}
 		err := rows.Scan(
@@ -100,10 +112,32 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 		return nil, err
 	}
 
+	byteProducts, err := json.Marshal(products)
+	if err != nil {
+		return
+	}
+	err = pr.cache.Set(ctx, "listProduct:"+key, string(byteProducts), time.Second*60).Err()
+	if err != nil {
+		return
+	}
+
 	return products, nil
 }
 
 func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams) (totalProducts int, err error) {
+	keyRaw := req.GetKey()
+	key := string(keyRaw)
+	fmt.Println(key)
+
+	rcmd := pr.cache.Get(ctx, "totalProduct:"+key)
+	if rcmd.Val() != "" {
+		err = rcmd.Scan(&totalProducts)
+		if err != nil && err != redis.Nil {
+			return
+		}
+		return
+	}
+
 	qCount := pr.ListQuery(req).Columns("count(id)")
 	qc, args, err := qCount.ToSql()
 	if err != nil {
@@ -111,6 +145,11 @@ func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQ
 	}
 
 	if err = pr.db.QueryRow(qc, args...).Scan(&totalProducts); err != nil {
+		return
+	}
+
+	err = pr.cache.Set(ctx, "totalProduct:"+key, totalProducts, time.Second*60).Err()
+	if err != nil {
 		return
 	}
 

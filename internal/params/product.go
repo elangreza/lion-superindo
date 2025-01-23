@@ -1,6 +1,7 @@
 package params
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -31,12 +32,18 @@ type ListProductQueryParams struct {
 	// sort=updated_at:desc,price:asc,name:desc
 	Sorts   []string `form:"sorts"`
 	sortMap map[string]string
-	Limit   uint64 `form:"limit"`
-	Page    uint64 `form:"page"`
+	Limit   int `form:"limit"`
+	Page    int `form:"page"`
+	key     string
 }
 
 func (pqr *ListProductQueryParams) Validate() error {
-	if pqr.Limit == 0 {
+
+	if pqr.Page < 1 {
+		pqr.Page = 1
+	}
+
+	if pqr.Limit < 1 {
 		pqr.Limit = 5
 	}
 
@@ -68,11 +75,18 @@ func (pqr *ListProductQueryParams) Validate() error {
 		}
 	}
 
+	key, _ := json.Marshal(pqr)
+	pqr.key = string(key)
+
 	return nil
 }
 
 func (pqr *ListProductQueryParams) GetSortMapping() map[string]string {
 	return pqr.sortMap
+}
+
+func (pqr *ListProductQueryParams) GetKey() string {
+	return pqr.key
 }
 
 type CreateOrUpdateProductRequest struct {

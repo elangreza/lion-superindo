@@ -17,6 +17,8 @@ import (
 	"github.com/elangreza14/superindo/internal/handler"
 	"github.com/elangreza14/superindo/internal/postgresql"
 	"github.com/elangreza14/superindo/internal/service"
+	"github.com/redis/go-redis/v9"
+
 	_ "github.com/lib/pq"
 )
 
@@ -24,11 +26,15 @@ func main() {
 	cfg, err := config.LoadConfig()
 	errChecker(err)
 
-	pool, err := setupDB(cfg)
+	dbPool, err := setupDB(cfg)
 	errChecker(err)
-	defer pool.Close()
+	defer dbPool.Close()
 
-	productRepo := postgresql.NewProductRepo(pool, nil)
+	redisPool := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	productRepo := postgresql.NewProductRepo(dbPool, redisPool)
 	productService := service.NewProductService(productRepo)
 	productHandler := handler.NewProductHandler(productService)
 
@@ -42,23 +48,24 @@ func main() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatalf("HTTP server ListenAndServe: %v", err)
-	}
 
-	wait := gracefulShutdown(context.Background(), 5*time.Second,
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatalf("HTTP server ListenAndServe: %v", err)
+		}
+	}()
+
+	<-gracefulShutdown(context.Background(), 5*time.Second,
 		func(ctx context.Context) error {
-			return srv.Close()
+			return srv.Shutdown(ctx)
 		},
 		func(ctx context.Context) error {
-			return pool.Close()
+			return dbPool.Close()
 		},
-		// TODO adjust for redis
-		// func(ctx context.Context) error {
-		// 	return srv.Close()
-		// },
+		func(ctx context.Context) error {
+			return redisPool.Shutdown(ctx).Err()
+		},
 	)
-	<-wait
 }
 
 func errChecker(err error) {
@@ -90,6 +97,7 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops ...operati
 		signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 		<-s
 
+		fmt.Println("a")
 		slog.Info("shutting down")
 
 		ctx, cancel := context.WithTimeout(ctx, timeout)

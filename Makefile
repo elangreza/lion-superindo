@@ -17,6 +17,9 @@ migrate-create:
 gen:
 	go generate ./...
 
+test:
+	go test ./...
+
 up:
 	docker compose up -d
 

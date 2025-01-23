@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/elangreza14/superindo/internal/params"
 )
@@ -28,7 +29,25 @@ func NewProductHandler(svc ProductService) *ProductHandler {
 }
 
 func (ph *ProductHandler) ListProductHandler(w http.ResponseWriter, r *http.Request) {
-	query := params.ListProductQueryParams{}
+	var err error
+	query := &params.ListProductQueryParams{}
+
+	if r.URL.Query().Get("page") != "" {
+		query.Page, err = strconv.Atoi(r.URL.Query().Get("page"))
+		if err != nil {
+			Error(w, http.StatusBadRequest, errors.New("not valid page"))
+			return
+		}
+	}
+
+	if r.URL.Query().Get("limit") != "" {
+		query.Limit, err = strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			Error(w, http.StatusBadRequest, errors.New("not valid limit"))
+			return
+		}
+	}
+
 	query.Search = r.URL.Query().Get("search")
 	query.Types = r.URL.Query()["types"]
 	query.Sorts = r.URL.Query()["sorts"]
@@ -37,7 +56,7 @@ func (ph *ProductHandler) ListProductHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	res, err := ph.svc.ListProduct(r.Context(), query)
+	res, err := ph.svc.ListProduct(r.Context(), *query)
 	if err != nil {
 		slog.Error("controller", "service", err.Error())
 		Error(w, http.StatusInternalServerError, errors.New("server error"))
