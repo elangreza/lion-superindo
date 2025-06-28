@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/elangreza14/superindo/internal/domain"
-	"github.com/elangreza14/superindo/internal/params"
+	"github.com/elangreza14/lion-superindo/internal/domain"
+	"github.com/elangreza14/lion-superindo/internal/params"
 )
 
 type ProductRepo struct {

@@ -4,11 +4,11 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"github.com/elangreza14/superindo/internal/domain"
-	"github.com/elangreza14/superindo/internal/params"
+	"github.com/elangreza14/lion-superindo/internal/domain"
+	"github.com/elangreza14/lion-superindo/internal/params"
+	errs "github.com/elangreza14/lion-superindo/pkg/error"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -99,7 +99,9 @@ func (ps *ProductService) CreateProduct(ctx context.Context, req params.CreatePr
 	}
 
 	if products > 0 {
-		return nil, errors.New("product already exist")
+		return nil, errs.AlreadyExistError{
+			Message: fmt.Sprintf("product %s", req.Name),
+		}
 	}
 
 	id, err := ps.db.CreateProduct(ctx, req)

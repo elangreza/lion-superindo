@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/elangreza14/superindo/internal/params"
+	"github.com/elangreza14/lion-superindo/internal/params"
 )
 
 type (
@@ -82,10 +82,10 @@ func (ph *ProductHandler) CreateProductHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		slog.Error("controller", "service", err.Error())
 		// TODO move this to a custom error type
-		if err.Error() == "product already exist" {
-			Error(w, http.StatusConflict, errors.New("product already exist"))
-			return
-		}
+		// if err.Error() == "product already exist" {
+		// 	Error(w, http.StatusConflict, errors.New("product already exist"))
+		// 	return
+		// }
 		Error(w, http.StatusInternalServerError, errors.New("server error"))
 		return
 	}

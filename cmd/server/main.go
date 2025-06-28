@@ -13,11 +13,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/elangreza14/superindo/cmd/server/config"
-	"github.com/elangreza14/superindo/internal/handler"
-	"github.com/elangreza14/superindo/internal/postgresql"
-	redisRepo "github.com/elangreza14/superindo/internal/redis"
-	"github.com/elangreza14/superindo/internal/service"
+	"github.com/elangreza14/lion-superindo/cmd/server/config"
+	"github.com/elangreza14/lion-superindo/internal/handler"
+	"github.com/elangreza14/lion-superindo/internal/postgresql"
+	redisRepo "github.com/elangreza14/lion-superindo/internal/redis"
+	"github.com/elangreza14/lion-superindo/internal/service"
 	"github.com/redis/go-redis/v9"
 
 	_ "github.com/lib/pq"

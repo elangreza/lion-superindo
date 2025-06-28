@@ -1,4 +1,4 @@
-module github.com/elangreza14/superindo
+module github.com/elangreza14/lion-superindo
 
 go 1.23.0
 

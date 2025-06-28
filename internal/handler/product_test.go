@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/elangreza14/superindo/internal/params"
-	mockhandler "github.com/elangreza14/superindo/mock/handler"
+	"github.com/elangreza14/lion-superindo/internal/params"
+	mockhandler "github.com/elangreza14/lion-superindo/mock/handler"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -48,7 +48,7 @@ func TestProductHandler_ListProductHandler_Error_When_Validate_Query_Params(t *t
 	ph := NewProductHandler(mockProductService)
 	routes := NewRoutes(ph)
 
-	r := httptest.NewRequest(http.MethodGet, "/product?sorts=test", nil)
+	r := httptest.NewRequest(http.MethodGet, "/product?sort=test", nil)
 	w := httptest.NewRecorder()
 	routes.ServeHTTP(w, r)
 

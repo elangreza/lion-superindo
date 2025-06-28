@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/elangreza14/superindo/internal/domain"
-	"github.com/elangreza14/superindo/internal/params"
+	"github.com/elangreza14/lion-superindo/internal/domain"
+	"github.com/elangreza14/lion-superindo/internal/params"
 	"github.com/redis/go-redis/v9"
 )
 

@@ -6,7 +6,7 @@ package postgresql
 // 	"time"
 
 // 	"github.com/DATA-DOG/go-sqlmock"
-// 	"github.com/elangreza14/superindo/internal/params"
+// 	"github.com/elangreza14/lion-superindo/internal/params"
 // 	"github.com/stretchr/testify/assert"
 // )
 

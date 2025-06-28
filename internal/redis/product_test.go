@@ -7,8 +7,8 @@ package redis
 // 	"time"
 
 // 	"github.com/DATA-DOG/go-sqlmock"
-// 	"github.com/elangreza14/superindo/internal/domain"
-// 	"github.com/elangreza14/superindo/internal/params"
+// 	"github.com/elangreza14/lion-superindo/internal/domain"
+// 	"github.com/elangreza14/lion-superindo/internal/params"
 // 	"github.com/go-redis/redismock/v9"
 // 	"github.com/stretchr/testify/assert"
 // )
