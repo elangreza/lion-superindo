@@ -24,10 +24,8 @@ import (
 )
 
 // TODO google wire
-// TODO update readme, separate docs
-// TODO swagger or openapi
-// TODO POSTMAN collection
 // TODO add ratelimiter
+// TODO swagger
 
 func main() {
 	cfg, err := config.LoadConfig()

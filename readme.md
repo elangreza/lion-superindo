@@ -26,23 +26,29 @@ indo, dengan spesifikasi sebagai berikut :
    make up
    ```
 
-2. Try adding a product:
+   the application will build within docker compose, and automatically seed the data into DB
 
-   ```curl
+2. **Add a Product**
+
+   ```sh
    curl --location 'http://localhost:8080/product' \
-   --header 'Content-Type: application/json' \
-   --data '{
-       "name":"kopi luwak",
-       "type":"Snack",
-       "price":10000
-   }'
+     --header 'Content-Type: application/json' \
+     --data '{
+       "name": "kopi luwak",
+       "type": "Snack",
+       "price": 10000
+     }'
    ```
 
-3. Try retrieving products:
+   👉 See the [POST `/product` API documentation](#post-product) for more details.
 
-   ```curl
-    curl --location 'localhost:8080/product?page=1&search=pe&type=buah&type=proteinas&sort=id%3Aasc'
+3. **Retrieve Products**
+
+   ```sh
+   curl --location 'http://localhost:8080/product?page=1&search=pe&type=buah&type=proteinas&sort=id:asc'
    ```
+
+   👉 See the [GET `/product` API documentation](#get-product) for more details.
 
 4. To shutdown the stack:
 
