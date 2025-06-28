@@ -28,22 +28,19 @@ func NewProductRepo(cache *redis.Client) *ProductRepo {
 	}
 }
 
-func (pr *ProductRepo) CacheProducts(ctx context.Context, req params.ListProductsQueryParams, CountProducts int, ListProducts []domain.Product) error {
+func (pr *ProductRepo) CacheProducts(ctx context.Context, req params.ListProductsQueryParams, countProducts int, listProducts []domain.Product) error {
 	keyRaw := prefixProduct + req.GetParamsKey()
 
-	products := make(map[string]any)
-
-	str, err := json.Marshal(ListProducts)
+	str, err := json.Marshal(listProducts)
 	if err != nil {
 		return err
 	}
-	products[req.GetOrderingKey()] = str
-	products[countProductsKeys] = CountProducts
 
-	if err := pr.cache.HSet(ctx, keyRaw, products).Err(); err != nil {
-		return err
-	}
-	return nil
+	products := make(map[string]any)
+	products[req.GetOrderingKey()] = str
+	products[countProductsKeys] = countProducts
+
+	return pr.cache.HSet(ctx, keyRaw, products).Err()
 }
 
 func (pr *ProductRepo) GetCachedProducts(ctx context.Context, req params.ListProductsQueryParams) ([]domain.Product, error) {

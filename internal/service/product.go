@@ -21,9 +21,9 @@ type (
 
 	CacheRepo interface {
 		FlushAll(ctx context.Context) error
-		CacheProducts(ctx context.Context, req params.ListProductsQueryParams, CountProducts int, ListProducts []domain.Product) error
-		GetCachedProducts(ctx context.Context, req params.ListProductsQueryParams) (ListProducts []domain.Product, err error)
-		GetCachedProductCount(ctx context.Context, req params.ListProductsQueryParams) (CountProducts int, err error)
+		CacheProducts(ctx context.Context, req params.ListProductsQueryParams, countProducts int, listProducts []domain.Product) error
+		GetCachedProducts(ctx context.Context, req params.ListProductsQueryParams) (listProducts []domain.Product, err error)
+		GetCachedProductCount(ctx context.Context, req params.ListProductsQueryParams) (countProducts int, err error)
 	}
 
 	ProductService struct {

@@ -1,176 +1,209 @@
 package redis
 
-// import (
-// 	"context"
-// 	"encoding/json"
-// 	"testing"
-// 	"time"
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"testing"
 
-// 	"github.com/DATA-DOG/go-sqlmock"
-// 	"github.com/elangreza14/lion-superindo/internal/domain"
-// 	"github.com/elangreza14/lion-superindo/internal/params"
-// 	"github.com/go-redis/redismock/v9"
-// 	"github.com/stretchr/testify/assert"
-// )
+	"github.com/elangreza14/lion-superindo/internal/domain"
+	"github.com/elangreza14/lion-superindo/internal/params"
+	"github.com/go-redis/redismock/v9"
+	"github.com/stretchr/testify/assert"
+)
 
-// // func TestProductRepo_ListProducts(t *testing.T) {
-// // 	db, mockSql, err := sqlmock.New()
-// // 	if err != nil {
-// // 		t.Error(err)
-// // 	}
-// // 	defer db.Close()
-// // 	dbRedis, mockRedis := redismock.NewClientMock()
-// // 	pr := &ProductRepo{db, dbRedis}
-// // 	now := time.Now()
-// // 	products := []domain.Product{
-// // 		{
-// // 			ID:    1,
-// // 			Name:  "test",
-// // 			Price: 1,
-// // 			ProductType: domain.ProductTypes{
-// // 				Name:     "test",
-// // 				BaseDate: domain.BaseDate{},
-// // 			},
-// // 			BaseDate: domain.BaseDate{
-// // 				CreatedAt: now,
-// // 				UpdatedAt: nil,
-// // 			},
-// // 		},
-// // 	}
-// // 	productJson, _ := json.Marshal(products)
+func TestProductRepo_CacheProducts(t *testing.T) {
+	dbRedis, mockRedis := redismock.NewClientMock()
+	pr := NewProductRepo(dbRedis)
 
-// // 	mockRedis.ExpectGet("ListProducts:").SetVal(string(productJson))
+	listProducts := []domain.Product{{ID: 1}}
 
-// // 	got, err := pr.ListProducts(context.Background(), params.ListProductsQueryParams{Limit: 1})
-// // 	assert.NotNil(t, pr)
-// // 	assert.NoError(t, err)
-// // 	assert.NotNil(t, got)
-// // 	if err := mockSql.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // 	if err := mockRedis.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // }
+	req := params.ListProductsQueryParams{}
+	req.Validate()
 
-// // func TestProductRepo_ListProducts_With_Cache_Is_Exist(t *testing.T) {
-// // 	db, mockSql, err := sqlmock.New()
-// // 	if err != nil {
-// // 		t.Error(err)
-// // 	}
-// // 	defer db.Close()
-// // 	dbRedis, mockRedis := redismock.NewClientMock()
-// // 	pr := &ProductRepo{db, dbRedis}
-// // 	now := time.Now()
+	jsonListProduct, _ := json.Marshal(listProducts)
 
-// // 	products := []domain.Product{
-// // 		{
-// // 			ID:    1,
-// // 			Name:  "test",
-// // 			Price: 1,
-// // 			ProductType: domain.ProductTypes{
-// // 				Name:     "test",
-// // 				BaseDate: domain.BaseDate{},
-// // 			},
-// // 			BaseDate: domain.BaseDate{
-// // 				CreatedAt: now,
-// // 				UpdatedAt: nil,
-// // 			},
-// // 		},
-// // 	}
-// // 	productJson, _ := json.Marshal(products)
+	products := make(map[string]any)
+	products[req.GetOrderingKey()] = jsonListProduct
+	products[countProductsKeys] = 1
 
-// // 	mockRedis.ExpectGet("ListProducts:").RedisNil()
-// // 	rows := sqlmock.
-// // 		NewRows([]string{"id", "name", "price", "product_type_name", "created_at", "created_at"}).
-// // 		AddRow(1, "test", 1, "test", now, nil)
-// // 	mockSql.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
-// // 	mockRedis.ExpectSet("ListProducts:", string(productJson), time.Second*60).SetVal(string(productJson))
+	keyRaw := prefixProduct + req.GetParamsKey()
+	mockRedis.ExpectHSet(keyRaw, products).SetVal(1)
 
-// // 	got, err := pr.ListProducts(context.Background(), params.ListProductsQueryParams{Limit: 1})
-// // 	assert.NotNil(t, pr)
-// // 	assert.NoError(t, err)
-// // 	assert.NotNil(t, got)
-// // 	if err := mockSql.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // 	if err := mockRedis.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // }
+	err := pr.CacheProducts(context.Background(), req, 1, listProducts)
+	assert.NoError(t, err)
+	if err := mockRedis.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
 
-// // func TestProductRepo_CountProducts_With_Cache_Is_Exist(t *testing.T) {
-// // 	db, mockSql, err := sqlmock.New()
-// // 	if err != nil {
-// // 		t.Error(err)
-// // 	}
-// // 	defer db.Close()
-// // 	dbRedis, mockRedis := redismock.NewClientMock()
-// // 	pr := &ProductRepo{db, dbRedis}
+func TestProductRepo_GetCachedProducts(t *testing.T) {
+	dbRedis, mockRedis := redismock.NewClientMock()
+	pr := NewProductRepo(dbRedis)
 
-// // 	mockRedis.ExpectGet("CountProducts:").SetVal("1")
+	listProducts := []domain.Product{{ID: 1}}
 
-// // 	got, err := pr.CountProducts(context.Background(), params.ListProductsQueryParams{Limit: 1}, true)
-// // 	assert.NotNil(t, pr)
-// // 	assert.NoError(t, err)
-// // 	assert.Equal(t, got, int(1))
-// // 	if err := mockSql.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // 	if err := mockRedis.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // }
+	req := params.ListProductsQueryParams{}
+	req.Validate()
 
-// // func TestProductRepo_CountProducts(t *testing.T) {
-// // 	db, mockSql, err := sqlmock.New()
-// // 	if err != nil {
-// // 		t.Error(err)
-// // 	}
-// // 	defer db.Close()
-// // 	dbRedis, mockRedis := redismock.NewClientMock()
-// // 	pr := &ProductRepo{db, dbRedis}
+	jsonListProduct, _ := json.Marshal(listProducts)
 
-// // 	mockRedis.ExpectGet("CountProducts:").RedisNil()
-// // 	rows := sqlmock.NewRows([]string{"count(id)"}).AddRow(1)
-// // 	mockSql.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
-// // 	mockRedis.ExpectSet("CountProducts:", 1, time.Second*60).SetVal("1")
+	tableTest := []struct {
+		name      string
+		expectErr bool
+		mock      func(m redismock.ClientMock)
+	}{
+		{
+			name:      "success",
+			expectErr: false,
+			mock: func(m redismock.ClientMock) {
+				keyRaw := prefixProduct + req.GetParamsKey()
+				m.ExpectHGet(keyRaw, req.GetOrderingKey()).SetVal(string(jsonListProduct))
+			},
+		},
+		{
+			name:      "failed",
+			expectErr: true,
+			mock: func(m redismock.ClientMock) {
+				keyRaw := prefixProduct + req.GetParamsKey()
+				m.ExpectHGet(keyRaw, req.GetOrderingKey()).SetErr(errors.New("redis error"))
+			},
+		},
+		{
+			name:      "failed when parsing",
+			expectErr: true,
+			mock: func(m redismock.ClientMock) {
+				keyRaw := prefixProduct + req.GetParamsKey()
+				m.ExpectHGet(keyRaw, req.GetOrderingKey()).SetVal(string("1"))
+			},
+		},
+	}
 
-// // 	got, err := pr.CountProducts(context.Background(), params.ListProductsQueryParams{Limit: 1}, true)
-// // 	assert.NotNil(t, pr)
-// // 	assert.NoError(t, err)
-// // 	assert.Equal(t, got, int(1))
-// // 	if err := mockSql.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // 	if err := mockRedis.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // }
+	for _, tt := range tableTest {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mock(mockRedis)
+			products, err := pr.GetCachedProducts(context.Background(), req)
+			if tt.expectErr {
+				assert.Error(t, err)
+				assert.Nil(t, products)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, listProducts, products)
+			}
+			if err := mockRedis.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
 
-// // func TestProductRepo_CreateProduct(t *testing.T) {
-// // 	dbSql, mockSql, err := sqlmock.New()
-// // 	if err != nil {
-// // 		t.Error(err)
-// // 	}
-// // 	defer dbSql.Close()
-// // 	dbRedis, mockRedis := redismock.NewClientMock()
-// // 	pr := &ProductRepo{dbSql, dbRedis}
+func TestProductRepo_GetCachedProductCount(t *testing.T) {
+	dbRedis, mockRedis := redismock.NewClientMock()
+	pr := NewProductRepo(dbRedis)
 
-// // 	mockSql.ExpectBegin()
-// // 	mockSql.ExpectExec("INSERT INTO product_types").WithArgs("buah").WillReturnResult(sqlmock.NewResult(1, 1))
-// // 	mockSql.ExpectQuery("INSERT INTO products").WithArgs("melon", 1000, "buah").WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(5))
-// // 	mockSql.ExpectCommit()
-// // 	mockRedis.ExpectFlushAll().SetVal("")
+	req := params.ListProductsQueryParams{}
+	req.Validate()
 
-// // 	id, err := pr.CreateProduct(context.Background(), params.CreateProductRequest{
-// // 		Name:  "melon",
-// // 		Price: 1000,
-// // 		Type:  "buah",
-// // 	})
-// // 	assert.NoError(t, err)
-// // 	if err := mockSql.ExpectationsWereMet(); err != nil {
-// // 		t.Errorf("there were unfulfilled expectations: %s", err)
-// // 	}
-// // 	assert.Equal(t, id, 5)
-// // }
+	tableTest := []struct {
+		name      string
+		expectErr bool
+		mock      func(m redismock.ClientMock)
+		got       int
+	}{
+		{
+			name:      "success",
+			expectErr: false,
+			mock: func(m redismock.ClientMock) {
+				keyRaw := prefixProduct + req.GetParamsKey()
+				m.ExpectHGet(keyRaw, countProductsKeys).SetVal(string("1"))
+			},
+			got: 1,
+		},
+		{
+			name:      "failed",
+			expectErr: true,
+			mock: func(m redismock.ClientMock) {
+				keyRaw := prefixProduct + req.GetParamsKey()
+				m.ExpectHGet(keyRaw, countProductsKeys).SetErr(errors.New("redis error"))
+			},
+			got: 0,
+		},
+		{
+			name:      "failed when parsing",
+			expectErr: true,
+			mock: func(m redismock.ClientMock) {
+				keyRaw := prefixProduct + req.GetParamsKey()
+				m.ExpectHGet(keyRaw, countProductsKeys).SetVal(string("a"))
+			},
+			got: 0,
+		},
+	}
+
+	for _, tt := range tableTest {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mock(mockRedis)
+			count, err := pr.GetCachedProductCount(context.Background(), req)
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tt.got, count)
+			if err := mockRedis.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestProductRepo_FlushAll(t *testing.T) {
+	dbRedis, mockRedis := redismock.NewClientMock()
+	pr := NewProductRepo(dbRedis)
+	pattern := prefixProduct + "*"
+
+	tableTest := []struct {
+		name      string
+		expectErr bool
+		mock      func(m redismock.ClientMock)
+	}{
+		{
+			name: "success",
+			mock: func(m redismock.ClientMock) {
+				m.ExpectScanType(0, pattern, 100, "hash").SetVal([]string{"a"}, 0)
+				m.ExpectDel("a").SetVal(1)
+			},
+			expectErr: false,
+		},
+		{
+			name: "failed scan",
+			mock: func(m redismock.ClientMock) {
+				m.ExpectScanType(0, pattern, 100, "hash").SetErr(errors.New("scan error"))
+			},
+			expectErr: true,
+		},
+		{
+			name: "failed delete",
+			mock: func(m redismock.ClientMock) {
+				m.ExpectScanType(0, pattern, 100, "hash").SetVal([]string{"a"}, 0)
+				m.ExpectDel("a").SetErr(errors.New("delete error"))
+			},
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tableTest {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mock(mockRedis)
+			err := pr.FlushAll(context.Background())
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			if err := mockRedis.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
