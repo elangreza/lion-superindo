@@ -3,37 +3,31 @@ package postgresql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
-	"log/slog"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/elangreza14/superindo/internal/domain"
 	"github.com/elangreza14/superindo/internal/params"
-	"github.com/redis/go-redis/v9"
 )
 
-type (
-	ProductRepo struct {
-		db    *sql.DB
-		cache *redis.Client
-	}
-)
-
-func NewProductRepo(db *sql.DB, cache *redis.Client) *ProductRepo {
-	return &ProductRepo{db, cache}
+type ProductRepo struct {
+	db *sql.DB
 }
 
-func (pr *ProductRepo) ListQuery(req params.ListProductQueryParams) squirrel.SelectBuilder {
+func NewProductRepo(db *sql.DB) *ProductRepo {
+	return &ProductRepo{db}
+}
+
+func (pr *ProductRepo) listQuery(req params.ListProductQueryParams) squirrel.SelectBuilder {
 	q := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).Select().From("products p")
 
-	if len(req.Search) != 0 {
-		if _, err := strconv.Atoi(req.Search); err == nil {
-			q = q.Where(squirrel.Eq{"p.id": req.Search})
+	search := strings.TrimSpace(req.Search)
+	if len(search) != 0 {
+		if _, err := strconv.Atoi(search); err == nil {
+			q = q.Where(squirrel.Eq{"p.id": search})
 		} else {
-			q = q.Where(squirrel.Like{"LOWER(p.name)": "%" + strings.ToLower(req.Search) + "%"})
+			q = q.Where(squirrel.Like{"LOWER(p.name)": "%" + strings.ToLower(search) + "%"})
 		}
 	}
 
@@ -44,32 +38,12 @@ func (pr *ProductRepo) ListQuery(req params.ListProductQueryParams) squirrel.Sel
 	return q
 }
 
-func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) (products []domain.Product, err error) {
-	keyRaw := req.GetKey()
-	key := "listProduct:" + string(keyRaw)
-
-	rcmd := pr.cache.Get(ctx, key)
-	if err != nil && err != redis.Nil {
-		return
-	}
-	if rcmd.Val() != "" {
-		err = json.Unmarshal([]byte(rcmd.Val()), &products)
-		if err != nil {
-			return
-		}
-		slog.Info("using redis", "method", "ListProduct")
-		return
-	}
-
-	q := pr.ListQuery(req).Columns("id", "name", "price", "product_type_name", "created_at", "updated_at")
+func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
+	q := pr.listQuery(req).Columns("id", "name", "price", "product_type_name", "created_at")
 
 	if req.GetSortMapping() != nil {
 		for key, direction := range req.GetSortMapping() {
-			if key == "updated_at" {
-				q = q.OrderBy("coalesce(p.updated_at, p.created_at)" + " " + direction)
-			} else {
-				q = q.OrderBy(key + " " + direction)
-			}
+			q = q.OrderBy(key + " " + direction)
 		}
 	} else {
 		q = q.OrderBy("id asc")
@@ -91,16 +65,15 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 	}
 	defer rows.Close()
 
-	// products := []domain.Product{}
+	var products []domain.Product
 	for rows.Next() {
-		product := domain.Product{}
+		var product domain.Product
 		err := rows.Scan(
 			&product.ID,
 			&product.Name,
 			&product.Price,
 			&product.ProductType.Name,
 			&product.CreatedAt,
-			&product.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -112,58 +85,27 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 		return nil, err
 	}
 
-	byteProducts, err := json.Marshal(products)
-	if err != nil {
-		return
-	}
-	err = pr.cache.Set(ctx, key, string(byteProducts), time.Second*60).Err()
-	if err != nil {
-		return
-	}
-
 	return products, nil
 }
 
-func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams, withCache bool) (totalProducts int, err error) {
-	keyRaw := req.GetKey()
-	key := "totalProduct:" + string(keyRaw)
-
-	if withCache {
-		rcmd := pr.cache.Get(ctx, key)
-		if rcmd.Val() != "" {
-			err = rcmd.Scan(&totalProducts)
-			if err != nil && err != redis.Nil {
-				return
-			}
-
-			slog.Info("using redis", "method", "TotalProduct")
-			return
-		}
-	}
-
-	qCount := pr.ListQuery(req).Columns("count(id)")
+func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams) (int, error) {
+	qCount := pr.listQuery(req).Columns("count(id)")
 	qc, args, err := qCount.ToSql()
 	if err != nil {
-		return
+		return 0, err
 	}
 
+	var totalProducts int
 	if err = pr.db.QueryRow(qc, args...).Scan(&totalProducts); err != nil {
-		return
+		return 0, err
 	}
 
-	if withCache {
-		if err = pr.cache.Set(ctx, key, totalProducts, time.Second*60).Err(); err != nil {
-			return
-		}
-	}
-
-	return
+	return totalProducts, nil
 }
 
-func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) (id int, err error) {
-
-	// id := 0
-	err = runInTx(ctx, pr.db, func(tx *sql.Tx) error {
+func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error) {
+	var id int
+	err := runInTx(ctx, pr.db, func(tx *sql.Tx) error {
 		qInsertProductType := `INSERT INTO product_types("name") VALUES($1) ON CONFLICT(name) DO NOTHING;`
 		if _, err := tx.ExecContext(ctx, qInsertProductType, req.Type); err != nil {
 			return err
@@ -178,12 +120,8 @@ func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProdu
 		return nil
 	})
 	if err != nil {
-		return
+		return 0, err
 	}
 
-	if err = pr.cache.FlushAll(ctx).Err(); err != nil {
-		return
-	}
-
-	return
+	return id, nil
 }

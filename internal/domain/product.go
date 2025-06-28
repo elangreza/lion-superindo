@@ -1,9 +1,11 @@
 package domain
 
+import "time"
+
 type Product struct {
 	ID          int
 	Name        string
 	Price       int
-	ProductType ProductTypes
-	BaseDate
+	ProductType ProductType
+	CreatedAt   time.Time
 }

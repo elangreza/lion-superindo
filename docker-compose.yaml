@@ -33,7 +33,7 @@ services:
     container_name: superindo-migrate
     image: migrate/migrate
     env_file:
-      - .env
+      - docker.env
     networks:
       - superindo
     volumes:
@@ -57,8 +57,9 @@ services:
       - "8080:8080"
     build: .
     container_name: superindoapp
+    restart: on-failure:3 
     env_file:
-      - .env
+      - docker.env
     depends_on:
       database:
         condition: service_healthy

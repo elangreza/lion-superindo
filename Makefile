@@ -2,7 +2,7 @@
 include .env
 	
 run-http:
-	go run cmd/rest/main.go
+	go run cmd/server/main.go
 
 FILENAME?=file-name
 
@@ -21,12 +21,13 @@ test:
 	go test ./...
 
 up:
-	docker compose up -d
+	cp ./env.example docker.env
+	docker compose up -d --build
+	cat ./db/seed/seed_1.sql | docker exec -i superindo-database psql -h localhost -U superindo -f-
 
 down:
 	docker compose down
 
-seed:
-	cat ./db/seed/seed_1.sql | docker exec -i superindo-database psql -h localhost -U superindo -f-
 
-.PHONY: migrate migrate-create run-http gen up down seed
+
+.PHONY: migrate migrate-create run-http gen up down

@@ -97,11 +97,11 @@ func TestProductHandler_ListProductHandler_Success(t *testing.T) {
 		TotalPage: 1,
 		Products: []params.ProductResponse{
 			{
-				ID:       1,
-				Name:     "semangka",
-				Price:    1,
-				Type:     "buah",
-				UpdateAt: time.Now(),
+				ID:        1,
+				Name:      "semangka",
+				Price:     1,
+				Type:      "buah",
+				CreatedAt: time.Now(),
 			},
 		},
 	}

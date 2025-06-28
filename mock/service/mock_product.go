@@ -18,32 +18,32 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockProductRepo is a mock of ProductRepo interface.
-type MockProductRepo struct {
+// MockDbRepo is a mock of DbRepo interface.
+type MockDbRepo struct {
 	ctrl     *gomock.Controller
-	recorder *MockProductRepoMockRecorder
+	recorder *MockDbRepoMockRecorder
 	isgomock struct{}
 }
 
-// MockProductRepoMockRecorder is the mock recorder for MockProductRepo.
-type MockProductRepoMockRecorder struct {
-	mock *MockProductRepo
+// MockDbRepoMockRecorder is the mock recorder for MockDbRepo.
+type MockDbRepoMockRecorder struct {
+	mock *MockDbRepo
 }
 
-// NewMockProductRepo creates a new mock instance.
-func NewMockProductRepo(ctrl *gomock.Controller) *MockProductRepo {
-	mock := &MockProductRepo{ctrl: ctrl}
-	mock.recorder = &MockProductRepoMockRecorder{mock}
+// NewMockDbRepo creates a new mock instance.
+func NewMockDbRepo(ctrl *gomock.Controller) *MockDbRepo {
+	mock := &MockDbRepo{ctrl: ctrl}
+	mock.recorder = &MockDbRepoMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockProductRepo) EXPECT() *MockProductRepoMockRecorder {
+func (m *MockDbRepo) EXPECT() *MockDbRepoMockRecorder {
 	return m.recorder
 }
 
 // CreateProduct mocks base method.
-func (m *MockProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error) {
+func (m *MockDbRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateProduct", ctx, req)
 	ret0, _ := ret[0].(int)
@@ -52,13 +52,13 @@ func (m *MockProductRepo) CreateProduct(ctx context.Context, req params.CreatePr
 }
 
 // CreateProduct indicates an expected call of CreateProduct.
-func (mr *MockProductRepoMockRecorder) CreateProduct(ctx, req any) *gomock.Call {
+func (mr *MockDbRepoMockRecorder) CreateProduct(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductRepo)(nil).CreateProduct), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockDbRepo)(nil).CreateProduct), ctx, req)
 }
 
 // ListProduct mocks base method.
-func (m *MockProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
+func (m *MockDbRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProduct", ctx, req)
 	ret0, _ := ret[0].([]domain.Product)
@@ -67,22 +67,104 @@ func (m *MockProductRepo) ListProduct(ctx context.Context, req params.ListProduc
 }
 
 // ListProduct indicates an expected call of ListProduct.
-func (mr *MockProductRepoMockRecorder) ListProduct(ctx, req any) *gomock.Call {
+func (mr *MockDbRepoMockRecorder) ListProduct(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProduct", reflect.TypeOf((*MockProductRepo)(nil).ListProduct), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProduct", reflect.TypeOf((*MockDbRepo)(nil).ListProduct), ctx, req)
 }
 
 // TotalProduct mocks base method.
-func (m *MockProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams, withCache bool) (int, error) {
+func (m *MockDbRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TotalProduct", ctx, req, withCache)
+	ret := m.ctrl.Call(m, "TotalProduct", ctx, req)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // TotalProduct indicates an expected call of TotalProduct.
-func (mr *MockProductRepoMockRecorder) TotalProduct(ctx, req, withCache any) *gomock.Call {
+func (mr *MockDbRepoMockRecorder) TotalProduct(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalProduct", reflect.TypeOf((*MockProductRepo)(nil).TotalProduct), ctx, req, withCache)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalProduct", reflect.TypeOf((*MockDbRepo)(nil).TotalProduct), ctx, req)
+}
+
+// MockCacheRepo is a mock of CacheRepo interface.
+type MockCacheRepo struct {
+	ctrl     *gomock.Controller
+	recorder *MockCacheRepoMockRecorder
+	isgomock struct{}
+}
+
+// MockCacheRepoMockRecorder is the mock recorder for MockCacheRepo.
+type MockCacheRepoMockRecorder struct {
+	mock *MockCacheRepo
+}
+
+// NewMockCacheRepo creates a new mock instance.
+func NewMockCacheRepo(ctrl *gomock.Controller) *MockCacheRepo {
+	mock := &MockCacheRepo{ctrl: ctrl}
+	mock.recorder = &MockCacheRepoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCacheRepo) EXPECT() *MockCacheRepoMockRecorder {
+	return m.recorder
+}
+
+// FlushAll mocks base method.
+func (m *MockCacheRepo) FlushAll(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FlushAll", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FlushAll indicates an expected call of FlushAll.
+func (mr *MockCacheRepoMockRecorder) FlushAll(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FlushAll", reflect.TypeOf((*MockCacheRepo)(nil).FlushAll), ctx)
+}
+
+// GetProductData mocks base method.
+func (m *MockCacheRepo) GetProductData(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductData", ctx, req)
+	ret0, _ := ret[0].([]domain.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductData indicates an expected call of GetProductData.
+func (mr *MockCacheRepoMockRecorder) GetProductData(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductData", reflect.TypeOf((*MockCacheRepo)(nil).GetProductData), ctx, req)
+}
+
+// GetProductTotal mocks base method.
+func (m *MockCacheRepo) GetProductTotal(ctx context.Context, req params.ListProductQueryParams) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductTotal", ctx, req)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductTotal indicates an expected call of GetProductTotal.
+func (mr *MockCacheRepoMockRecorder) GetProductTotal(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductTotal", reflect.TypeOf((*MockCacheRepo)(nil).GetProductTotal), ctx, req)
+}
+
+// SetProduct mocks base method.
+func (m *MockCacheRepo) SetProduct(ctx context.Context, req params.ListProductQueryParams, totalProducts int, listProducts []domain.Product) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetProduct", ctx, req, totalProducts, listProducts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetProduct indicates an expected call of SetProduct.
+func (mr *MockCacheRepoMockRecorder) SetProduct(ctx, req, totalProducts, listProducts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetProduct", reflect.TypeOf((*MockCacheRepo)(nil).SetProduct), ctx, req, totalProducts, listProducts)
 }

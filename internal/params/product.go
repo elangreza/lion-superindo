@@ -3,16 +3,17 @@ package params
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
 
 type ProductResponse struct {
-	ID       int       `json:"id"`
-	Name     string    `json:"name"`
-	Price    int       `json:"price"`
-	Type     string    `json:"type"`
-	UpdateAt time.Time `json:"updated_at"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Price     int       `json:"price"`
+	Type      string    `json:"type"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ListProductResponses struct {
@@ -22,70 +23,51 @@ type ListProductResponses struct {
 }
 
 type ListProductQueryParams struct {
-	// can be search with
-	// id and name
-	Search string `form:"search"`
+	// can be searched by id or name
+	Search string
 	// can be filtered by product type
-	Types []string `form:"types"`
-	// can be used with
-	// sort=updated_at:desc,price:asc,name:desc
-	Sorts   []string `form:"sorts"`
-	sortMap map[string]string
-	Limit   int `form:"limit"`
-	Page    int `form:"page"`
-	key     string
+	Types []string
+
+	// local var. used for caching key
+	paramsKey string
+
+	// Embedding PaginationParams for pagination and sorting
+	PaginationParams
 }
 
 func (pqr *ListProductQueryParams) Validate() error {
 
-	if pqr.Page < 1 {
-		pqr.Page = 1
+	if err := pqr.PaginationParams.Validate(); err != nil {
+		return err
 	}
 
-	if pqr.Limit < 1 {
-		pqr.Limit = 5
+	validSortKeys := map[string]bool{
+		"id": true, "created_at": true, "price": true, "name": true,
 	}
-
-	pqr.Search = strings.TrimSpace(pqr.Search)
-
-	if len(pqr.Sorts) > 0 {
-		pqr.sortMap = make(map[string]string)
-		for _, sortRaw := range pqr.Sorts {
-			sortStr := strings.Split(sortRaw, ":")
-			if len(sortStr) != 2 {
-				return errors.New("not valid sort format")
-			}
-
-			sortValue := sortStr[0]
-			switch sortValue {
-			case "updated_at", "price", "name":
-			default:
-				return errors.New("not valid sort value")
-			}
-
-			sortDirection := strings.ToLower(sortStr[1])
-			switch sortDirection {
-			case "asc", "desc":
-			default:
-				return errors.New("not valid sort direction")
-			}
-
-			pqr.sortMap[sortValue] = sortDirection
+	for sortKey := range pqr.GetSortMapping() {
+		if !validSortKeys[sortKey] {
+			return fmt.Errorf("%s not valid sort key", sortKey)
 		}
 	}
 
-	key, _ := json.Marshal(pqr)
-	pqr.key = string(key)
+	pqr.Search = strings.TrimSpace(pqr.Search)
+	mapKey := map[string]any{
+		"search": pqr.Search,
+		"types":  pqr.Types,
+	}
+
+	key, err := json.Marshal(mapKey)
+	if err != nil {
+		return errors.New("failed to marshal query params for cache key")
+	}
+
+	pqr.paramsKey = string(key)
 
 	return nil
 }
 
-func (pqr *ListProductQueryParams) GetSortMapping() map[string]string {
-	return pqr.sortMap
-}
-
-func (pqr *ListProductQueryParams) GetKey() string {
-	return pqr.key
+func (pqr *ListProductQueryParams) GetParamsKey() string {
+	return pqr.paramsKey
 }
 
 type CreateProductRequest struct {
@@ -102,15 +84,12 @@ func (pqr *CreateProductRequest) Validate() error {
 	if len(pqr.Name) == 0 {
 		return errors.New("name cannot be empty")
 	}
-
 	if len(pqr.Type) == 0 {
 		return errors.New("type cannot be empty")
 	}
 	pqr.Type = strings.ToLower(pqr.Type)
-
 	if pqr.Price < 0 {
 		return errors.New("price cannot be negative")
 	}
-
 	return nil
 }

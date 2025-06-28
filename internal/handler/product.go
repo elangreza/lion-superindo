@@ -49,8 +49,8 @@ func (ph *ProductHandler) ListProductHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	query.Search = r.URL.Query().Get("search")
-	query.Types = r.URL.Query()["types"]
-	query.Sorts = r.URL.Query()["sorts"]
+	query.Types = r.URL.Query()["type"]
+	query.Sorts = r.URL.Query()["sort"]
 	if err := query.Validate(); err != nil {
 		Error(w, http.StatusBadRequest, err)
 		return
@@ -81,6 +81,7 @@ func (ph *ProductHandler) CreateProductHandler(w http.ResponseWriter, r *http.Re
 	res, err := ph.svc.CreateProduct(r.Context(), body)
 	if err != nil {
 		slog.Error("controller", "service", err.Error())
+		// TODO move this to a custom error type
 		if err.Error() == "product already exist" {
 			Error(w, http.StatusConflict, errors.New("product already exist"))
 			return

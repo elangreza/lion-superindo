@@ -5,74 +5,95 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/elangreza14/superindo/internal/domain"
 	"github.com/elangreza14/superindo/internal/params"
+	"github.com/redis/go-redis/v9"
 )
 
 type (
-	ProductRepo interface {
+	DbRepo interface {
 		ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error)
-		TotalProduct(ctx context.Context, req params.ListProductQueryParams, withCache bool) (int, error)
+		TotalProduct(ctx context.Context, req params.ListProductQueryParams) (int, error)
 		CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error)
 	}
 
+	CacheRepo interface {
+		FlushAll(ctx context.Context) error
+		SetProduct(ctx context.Context, req params.ListProductQueryParams, totalProducts int, listProducts []domain.Product) error
+		GetProductData(ctx context.Context, req params.ListProductQueryParams) (listProducts []domain.Product, err error)
+		GetProductTotal(ctx context.Context, req params.ListProductQueryParams) (totalProducts int, err error)
+	}
+
 	ProductService struct {
-		repo ProductRepo
+		db    DbRepo
+		cache CacheRepo
 	}
 )
 
-func NewProductService(repo ProductRepo) *ProductService {
+func NewProductService(repo DbRepo, cache CacheRepo) *ProductService {
 	return &ProductService{
-		repo: repo,
+		db:    repo,
+		cache: cache,
 	}
 }
 
 func (ps *ProductService) ListProduct(ctx context.Context, req params.ListProductQueryParams) (*params.ListProductResponses, error) {
-	totalProducts, err := ps.repo.TotalProduct(ctx, req, true)
+	products, err := ps.cache.GetProductData(ctx, req)
+	if err != nil && err != redis.Nil {
+		return nil, fmt.Errorf("cache error: %w", err)
+	}
+
+	if len(products) == 0 && err == redis.Nil {
+		products, err = ps.db.ListProduct(ctx, req)
+		if err != nil {
+			return nil, fmt.Errorf("db error: %w", err)
+		}
+	}
+
+	totalProducts, err := ps.cache.GetProductTotal(ctx, req)
+	if err != nil && err != redis.Nil {
+		return nil, fmt.Errorf("cache error (total products): %w", err)
+	}
+
+	if totalProducts == 0 && err == redis.Nil {
+		totalProducts, err = ps.db.TotalProduct(ctx, req)
+		if err != nil {
+			return nil, fmt.Errorf("db error (total products): %w", err)
+		}
+	}
+
+	err = ps.cache.SetProduct(ctx, req, totalProducts, products)
 	if err != nil {
 		return nil, err
 	}
 
-	res := params.ListProductResponses{
-		TotalData: totalProducts,
-		Products:  []params.ProductResponse{},
-	}
+	res := params.ListProductResponses{}
 
 	if totalProducts == 0 {
 		return &res, nil
 	}
 
-	products, err := ps.repo.ListProduct(ctx, req)
-	if err != nil {
-		return nil, err
-	}
+	res.TotalData = totalProducts
+	res.TotalPage = (totalProducts + int(req.Limit) - 1) / int(req.Limit)
 
-	res.TotalPage = totalProducts / int(req.Limit)
-	if totalProducts%int(req.Limit) != 0 {
-		res.TotalPage++
-	}
-
+	res.Products = make([]params.ProductResponse, 0, len(products))
 	for _, product := range products {
-		updatedAt := product.CreatedAt
-		if product.UpdatedAt != nil {
-			updatedAt = *product.UpdatedAt
-		}
-		res.Products = append(res.Products,
-			params.ProductResponse{
-				ID:       product.ID,
-				Name:     product.Name,
-				Price:    product.Price,
-				Type:     product.ProductType.Name,
-				UpdateAt: updatedAt,
-			})
+		res.Products = append(res.Products, params.ProductResponse{
+			ID:        product.ID,
+			Name:      product.Name,
+			Price:     product.Price,
+			Type:      product.ProductType.Name,
+			CreatedAt: product.CreatedAt,
+		})
 	}
 
 	return &res, nil
 }
 
 func (ps *ProductService) CreateProduct(ctx context.Context, req params.CreateProductRequest) (*params.CreateProductResponse, error) {
-	products, err := ps.repo.TotalProduct(ctx, params.ListProductQueryParams{Search: req.Name}, false)
+	products, err := ps.db.TotalProduct(ctx, params.ListProductQueryParams{Search: req.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +102,13 @@ func (ps *ProductService) CreateProduct(ctx context.Context, req params.CreatePr
 		return nil, errors.New("product already exist")
 	}
 
-	id, err := ps.repo.CreateProduct(ctx, req)
+	id, err := ps.db.CreateProduct(ctx, req)
 	if err != nil {
 		return nil, err
+	}
+
+	if err := ps.cache.FlushAll(ctx); err != nil {
+		return nil, fmt.Errorf("failed to flush cache: %w", err)
 	}
 
 	return &params.CreateProductResponse{ID: id}, nil

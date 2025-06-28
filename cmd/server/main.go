@@ -13,14 +13,23 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/elangreza14/superindo/cmd/rest/config"
+	"github.com/elangreza14/superindo/cmd/server/config"
 	"github.com/elangreza14/superindo/internal/handler"
 	"github.com/elangreza14/superindo/internal/postgresql"
+	redisRepo "github.com/elangreza14/superindo/internal/redis"
 	"github.com/elangreza14/superindo/internal/service"
 	"github.com/redis/go-redis/v9"
 
 	_ "github.com/lib/pq"
 )
+
+// TODO google wire
+// TODO finish unit test
+// TODO swagger or openapi
+// TODO POSTMAN collection
+// TODO custom error handling
+// TODO move into newest git repository
+// TODO add ratelimiter
 
 func main() {
 	cfg, err := config.LoadConfig()
@@ -30,19 +39,19 @@ func main() {
 	errChecker(err)
 	defer dbPool.Close()
 
-	redisPool := redis.NewClient(&redis.Options{
-		Addr: cfg.REDIS_ADDRESS,
-	})
+	cacheClient, err := setupCache(cfg)
+	errChecker(err)
 
-	productRepo := postgresql.NewProductRepo(dbPool, redisPool)
-	productService := service.NewProductService(productRepo)
+	productDb := postgresql.NewProductRepo(dbPool)
+	productCache := redisRepo.NewProductRepo(cacheClient)
+	productService := service.NewProductService(productDb, productCache)
 	productHandler := handler.NewProductHandler(productService)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/product", productHandler.ProductHandler)
 
 	srv := &http.Server{
-		Addr:           cfg.HTTP_PORT,
+		Addr:           fmt.Sprintf(":%s", cfg.HTTP_PORT),
 		Handler:        mux,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -55,6 +64,8 @@ func main() {
 		}
 	}()
 
+	slog.Info("server started", "port", cfg.HTTP_PORT)
+
 	<-gracefulShutdown(context.Background(), 5*time.Second,
 		func(ctx context.Context) error {
 			return srv.Shutdown(ctx)
@@ -63,14 +74,14 @@ func main() {
 			return dbPool.Close()
 		},
 		func(ctx context.Context) error {
-			return redisPool.Shutdown(ctx).Err()
+			return cacheClient.Shutdown(ctx).Err()
 		},
 	)
 }
 
 func errChecker(err error) {
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
@@ -84,7 +95,30 @@ func setupDB(cfg *config.Config) (*sql.DB, error) {
 		cfg.POSTGRES_SSL,
 	)
 
-	return sql.Open("postgres", connString)
+	db, err := sql.Open("postgres", connString)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func setupCache(cfg *config.Config) (*redis.Client, error) {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%s", cfg.REDIS_HOSTNAME, cfg.REDIS_PORT),
+	})
+
+	err := redisClient.Ping(context.Background()).Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return redisClient, nil
 }
 
 type operation func(ctx context.Context) error
@@ -126,7 +160,6 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops ...operati
 		}
 
 		wg.Wait()
-		cancel()
 	}()
 
 	return wait
