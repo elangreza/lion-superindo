@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"log/slog"
@@ -14,37 +13,22 @@ import (
 	"time"
 
 	"github.com/elangreza14/lion-superindo/cmd/server/config"
-	"github.com/elangreza14/lion-superindo/internal/handler"
-	"github.com/elangreza14/lion-superindo/internal/postgresql"
-	redisRepo "github.com/elangreza14/lion-superindo/internal/redis"
-	"github.com/elangreza14/lion-superindo/internal/service"
-	"github.com/redis/go-redis/v9"
 
 	_ "github.com/lib/pq"
 )
 
-// TODO google wire
 // TODO add ratelimiter
-// TODO swagger
+// TODO swagger https://github.com/swaggo/swag
 
 func main() {
 	cfg, err := config.LoadConfig()
 	errChecker(err)
 
-	dbPool, err := setupDB(cfg)
+	deps, err := InitializeProductHandler(cfg)
 	errChecker(err)
-	defer dbPool.Close()
-
-	cacheClient, err := setupCache(cfg)
-	errChecker(err)
-
-	productDb := postgresql.NewProductRepo(dbPool)
-	productCache := redisRepo.NewProductRepo(cacheClient)
-	productService := service.NewProductService(productDb, productCache)
-	productHandler := handler.NewProductHandler(productService)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/product", productHandler.ProductHandler)
+	mux.HandleFunc("/product", deps.Handler.ProductHandler)
 
 	srv := &http.Server{
 		Addr:           fmt.Sprintf(":%s", cfg.HTTP_PORT),
@@ -67,10 +51,10 @@ func main() {
 			return srv.Shutdown(ctx)
 		},
 		func(ctx context.Context) error {
-			return dbPool.Close()
+			return deps.DB.Close()
 		},
 		func(ctx context.Context) error {
-			cacheClient.Close()
+			deps.RedisClient.Close()
 			return nil
 		},
 	)
@@ -82,41 +66,41 @@ func errChecker(err error) {
 	}
 }
 
-func setupDB(cfg *config.Config) (*sql.DB, error) {
-	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		cfg.POSTGRES_USER,
-		cfg.POSTGRES_PASSWORD,
-		cfg.POSTGRES_HOSTNAME,
-		cfg.POSTGRES_PORT,
-		cfg.POSTGRES_DB,
-		cfg.POSTGRES_SSL,
-	)
+// func setupDB(cfg *config.Config) (*sql.DB, error) {
+// 	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+// 		cfg.POSTGRES_USER,
+// 		cfg.POSTGRES_PASSWORD,
+// 		cfg.POSTGRES_HOSTNAME,
+// 		cfg.POSTGRES_PORT,
+// 		cfg.POSTGRES_DB,
+// 		cfg.POSTGRES_SSL,
+// 	)
 
-	db, err := sql.Open("postgres", connString)
-	if err != nil {
-		return nil, err
-	}
+// 	db, err := sql.Open("postgres", connString)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
+// 	err = db.Ping()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return db, nil
-}
+// 	return db, nil
+// }
 
-func setupCache(cfg *config.Config) (*redis.Client, error) {
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%s", cfg.REDIS_HOSTNAME, cfg.REDIS_PORT),
-	})
+// func setupCache(cfg *config.Config) (*redis.Client, error) {
+// 	redisClient := redis.NewClient(&redis.Options{
+// 		Addr: fmt.Sprintf("%s:%s", cfg.REDIS_HOSTNAME, cfg.REDIS_PORT),
+// 	})
 
-	err := redisClient.Ping(context.Background()).Err()
-	if err != nil {
-		return nil, err
-	}
+// 	err := redisClient.Ping(context.Background()).Err()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return redisClient, nil
-}
+// 	return redisClient, nil
+// }
 
 type operation func(ctx context.Context) error
 
