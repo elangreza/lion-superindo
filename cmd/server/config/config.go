@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/joho/godotenv"
 
 	kenv "github.com/knadh/koanf/providers/env"
@@ -33,7 +31,7 @@ func LoadConfig() (*Config, error) {
 	}), nil)
 
 	if err := k.Unmarshal("", &config); err != nil {
-		return nil, fmt.Errorf("error unmarshaling config: %w", err)
+		return nil, err
 	}
 
 	return &config, nil
