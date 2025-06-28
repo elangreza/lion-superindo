@@ -1,4 +1,4 @@
-# Coding test SuperIndo:
+# Coding test Lion Superindo:
 
 Buatlah sebuah API dengan endpoint /product untuk menambahkan dan mengambil data product super
 indo, dengan spesifikasi sebagai berikut :
@@ -44,108 +44,86 @@ indo, dengan spesifikasi sebagai berikut :
     curl --location 'localhost:8080/product?page=1&search=pe&type=buah&type=proteinas&sort=id%3Aasc'
    ```
 
+4. To shutdown the stack:
+
+   ```sh
+    make down
+   ```
+
 ## API Documentation
 
-1.  `/product` API
+### `/product` Endpoint
 
-    - The **POST** method is used to create a new product. The payload must follow this format:
+Only **POST** and **GET** methods are supported for this endpoint. Any other HTTP method will return a "Method Not Allowed" (405) error.
 
-      ```json
-      {
-        "name": "kopi luwak",
-        "type": "Snack",
-        "price": 10000
+#### POST `/product`
+
+- **Purpose:** Create a new product.
+- **Request Body:**
+  ```json
+  {
+    "name": "kopi luwak",
+    "type": "Snack",
+    "price": 10000
+  }
+  ```
+- **Responses:**
+  - **201 Created**
+    ```json
+    { "data": { "id": 168 } }
+    ```
+  - **409 Conflict** (Product already exists)
+    ```json
+    { "error": "product already exist" }
+    ```
+
+#### GET `/product`
+
+- **Purpose:** Retrieve a list of products.
+- **Query Parameters:**
+
+  - `search` — Search by id or name.  
+    _Example:_ `/product?search=semangka`
+  - `sort` — Sort by `id`, `name`, `price`, or `created_at`.  
+    _Format:_ `key:asc` or `key:desc`  
+    _Example:_ `/product?sort=created_at:asc&sort=name:desc&sort=price:asc`
+  - `type` — Filter by product type.  
+    _Example:_ `/product?type=buah&type=snack`
+  - `page` — Pagination.  
+    _Example:_ `/product?page=1`
+  - `limit` — Items per page.  
+    _Example:_ `/product?limit=10`
+
+- **Response:**
+  - **200 OK**
+    ```json
+    {
+      "data": {
+        "total_data": 2,
+        "total_page": 2,
+        "products": [
+          {
+            "id": 168,
+            "name": "kopi luwak",
+            "price": 10000,
+            "type": "snack",
+            "created_at": "2025-01-23T10:51:05.445274Z"
+          },
+          {
+            "id": 167,
+            "name": "kopi Arabica",
+            "price": 10000,
+            "type": "snack",
+            "created_at": "2025-01-23T10:39:33.187086Z"
+          }
+        ]
       }
-      ```
+    }
+    ```
 
-      If the product is created, you will receive status **201**:
+#### Other Methods
 
-      ```json
-      {
-        "data": {
-          "id": 168
-        }
-      }
-      ```
-
-      If the product already exists in the database, you will receive status **409**:
-
-      ```json
-      {
-        "error": "product already exist"
-      }
-      ```
-
-    - The **GET** method is used to retrieve a list of products. This method can be combined with query parameters, with 5 possible values:
-
-      1. **search**
-         Used to search by id or name.
-
-         Example:
-
-         ```
-         /product?search=semangka
-         ```
-
-      2. **sort**
-         Used to sort the data; it can only be used for _name_, _price_, and _created_at_. The format for sorting is `key:asc` or `key:desc`. Example:
-
-         ```
-         /product?sort=created_at:asc&sort=name:desc&sort=price:asc
-         ```
-
-      3. **type**
-         Used to filter the data by product type. Example:
-
-         ```
-         /product?type=buah&type=snack
-         ```
-
-      4. **page**
-         Used for pagination. Example:
-
-         ```
-         /product?page=1
-         ```
-
-      5. **limit**
-         Used to limit the number of items per page. Example:
-
-         ```
-         /product?page=1
-         ```
-
-      The response will look like this, with status **200**:
-
-      ```json
-      {
-        "data": {
-          "total_data": 2,
-          "total_page": 2,
-          "products": [
-            {
-              "id": 168,
-              "name": "kopi luwak",
-              "price": 10000,
-              "type": "snack",
-              "created_at": "2025-01-23T10:51:05.445274Z"
-            },
-            {
-              "id": 167,
-              "name": "kopi Arabica",
-              "price": 10000,
-              "type": "snack",
-              "created_at": "2025-01-23T10:39:33.187086Z"
-            }
-          ]
-        }
-      }
-      ```
-
-    - Any other method will be rejected with status **405**:
-
-      ```json
-      {
-        "error": "invalid method"
-      }
-      ```
+- **405 Method Not Allowed**
+  ```json
+  { "error": "invalid method" }
+  ```
