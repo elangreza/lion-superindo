@@ -74,7 +74,8 @@ func main() {
 			return dbPool.Close()
 		},
 		func(ctx context.Context) error {
-			return cacheClient.Shutdown(ctx).Err()
+			cacheClient.Close()
+			return nil
 		},
 	)
 }
