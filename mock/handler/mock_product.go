@@ -56,17 +56,17 @@ func (mr *MockProductServiceMockRecorder) CreateProduct(ctx, req any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateProduct", reflect.TypeOf((*MockProductService)(nil).CreateProduct), ctx, req)
 }
 
-// ListProduct mocks base method.
-func (m *MockProductService) ListProduct(ctx context.Context, args params.ListProductQueryParams) (*params.ListProductResponses, error) {
+// ListProducts mocks base method.
+func (m *MockProductService) ListProducts(ctx context.Context, args params.ListProductsQueryParams) (*params.ListProductsResponses, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListProduct", ctx, args)
-	ret0, _ := ret[0].(*params.ListProductResponses)
+	ret := m.ctrl.Call(m, "ListProducts", ctx, args)
+	ret0, _ := ret[0].(*params.ListProductsResponses)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListProduct indicates an expected call of ListProduct.
-func (mr *MockProductServiceMockRecorder) ListProduct(ctx, args any) *gomock.Call {
+// ListProducts indicates an expected call of ListProducts.
+func (mr *MockProductServiceMockRecorder) ListProducts(ctx, args any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProduct", reflect.TypeOf((*MockProductService)(nil).ListProduct), ctx, args)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProducts", reflect.TypeOf((*MockProductService)(nil).ListProducts), ctx, args)
 }

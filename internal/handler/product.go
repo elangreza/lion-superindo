@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -15,7 +14,7 @@ import (
 
 type (
 	ProductService interface {
-		ListProduct(ctx context.Context, args params.ListProductQueryParams) (*params.ListProductResponses, error)
+		ListProducts(ctx context.Context, args params.ListProductsQueryParams) (*params.ListProductsResponses, error)
 		CreateProduct(ctx context.Context, req params.CreateProductRequest) (*params.CreateProductResponse, error)
 	}
 
@@ -28,9 +27,9 @@ func NewProductHandler(svc ProductService) *ProductHandler {
 	return &ProductHandler{svc: svc}
 }
 
-func (ph *ProductHandler) ListProductHandler(w http.ResponseWriter, r *http.Request) {
+func (ph *ProductHandler) ListProductsHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
-	query := &params.ListProductQueryParams{}
+	query := &params.ListProductsQueryParams{}
 
 	if r.URL.Query().Get("page") != "" {
 		query.Page, err = strconv.Atoi(r.URL.Query().Get("page"))
@@ -56,9 +55,8 @@ func (ph *ProductHandler) ListProductHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	res, err := ph.svc.ListProduct(r.Context(), *query)
+	res, err := ph.svc.ListProducts(r.Context(), *query)
 	if err != nil {
-		slog.Error("controller", "service", err.Error())
 		Error(w, http.StatusInternalServerError, errors.New("server error"))
 		return
 	}
@@ -80,12 +78,6 @@ func (ph *ProductHandler) CreateProductHandler(w http.ResponseWriter, r *http.Re
 
 	res, err := ph.svc.CreateProduct(r.Context(), body)
 	if err != nil {
-		slog.Error("controller", "service", err.Error())
-		// TODO move this to a custom error type
-		// if err.Error() == "product already exist" {
-		// 	Error(w, http.StatusConflict, errors.New("product already exist"))
-		// 	return
-		// }
 		Error(w, http.StatusInternalServerError, errors.New("server error"))
 		return
 	}
@@ -96,7 +88,7 @@ func (ph *ProductHandler) CreateProductHandler(w http.ResponseWriter, r *http.Re
 func (ph *ProductHandler) ProductHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		ph.ListProductHandler(w, r)
+		ph.ListProductsHandler(w, r)
 	case http.MethodPost:
 		ph.CreateProductHandler(w, r)
 	default:

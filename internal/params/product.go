@@ -16,13 +16,13 @@ type ProductResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type ListProductResponses struct {
+type ListProductsResponses struct {
 	TotalData int               `json:"total_data"`
 	TotalPage int               `json:"total_page"`
 	Products  []ProductResponse `json:"products"`
 }
 
-type ListProductQueryParams struct {
+type ListProductsQueryParams struct {
 	// can be searched by id or name
 	Search string
 	// can be filtered by product type
@@ -35,7 +35,7 @@ type ListProductQueryParams struct {
 	PaginationParams
 }
 
-func (pqr *ListProductQueryParams) Validate() error {
+func (pqr *ListProductsQueryParams) Validate() error {
 
 	if err := pqr.PaginationParams.Validate(); err != nil {
 		return err
@@ -66,7 +66,7 @@ func (pqr *ListProductQueryParams) Validate() error {
 	return nil
 }
 
-func (pqr *ListProductQueryParams) GetParamsKey() string {
+func (pqr *ListProductsQueryParams) GetParamsKey() string {
 	return pqr.paramsKey
 }
 

@@ -18,8 +18,8 @@ type (
 )
 
 const (
-	totalProductKeys = "total"
-	prefixProduct    = "product:"
+	countProductsKeys = "count"
+	prefixProduct     = "product:"
 )
 
 func NewProductRepo(cache *redis.Client) *ProductRepo {
@@ -28,17 +28,17 @@ func NewProductRepo(cache *redis.Client) *ProductRepo {
 	}
 }
 
-func (pr *ProductRepo) SetProduct(ctx context.Context, req params.ListProductQueryParams, totalProducts int, listProducts []domain.Product) error {
+func (pr *ProductRepo) CacheProducts(ctx context.Context, req params.ListProductsQueryParams, CountProducts int, ListProducts []domain.Product) error {
 	keyRaw := prefixProduct + req.GetParamsKey()
 
 	products := make(map[string]any)
 
-	str, err := json.Marshal(listProducts)
+	str, err := json.Marshal(ListProducts)
 	if err != nil {
 		return err
 	}
 	products[req.GetOrderingKey()] = str
-	products[totalProductKeys] = totalProducts
+	products[countProductsKeys] = CountProducts
 
 	if err := pr.cache.HSet(ctx, keyRaw, products).Err(); err != nil {
 		return err
@@ -46,7 +46,7 @@ func (pr *ProductRepo) SetProduct(ctx context.Context, req params.ListProductQue
 	return nil
 }
 
-func (pr *ProductRepo) GetProductData(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
+func (pr *ProductRepo) GetCachedProducts(ctx context.Context, req params.ListProductsQueryParams) ([]domain.Product, error) {
 	keyRaw := prefixProduct + req.GetParamsKey()
 
 	res, err := pr.cache.HGet(ctx, keyRaw, req.GetOrderingKey()).Result()
@@ -61,10 +61,10 @@ func (pr *ProductRepo) GetProductData(ctx context.Context, req params.ListProduc
 	return listProducts, nil
 }
 
-func (pr *ProductRepo) GetProductTotal(ctx context.Context, req params.ListProductQueryParams) (int, error) {
+func (pr *ProductRepo) GetCachedProductCount(ctx context.Context, req params.ListProductsQueryParams) (int, error) {
 	keyRaw := prefixProduct + req.GetParamsKey()
 
-	res, err := pr.cache.HGet(ctx, keyRaw, totalProductKeys).Result()
+	res, err := pr.cache.HGet(ctx, keyRaw, countProductsKeys).Result()
 	if err != nil {
 		return 0, err
 	}

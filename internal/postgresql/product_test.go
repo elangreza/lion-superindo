@@ -10,7 +10,7 @@ package postgresql
 // 	"github.com/stretchr/testify/assert"
 // )
 
-// // func TestProductRepo_ListProduct(t *testing.T) {
+// // func TestProductRepo_ListProducts(t *testing.T) {
 // // 	db, mockSql, err := sqlmock.New()
 // // 	if err != nil {
 // // 		t.Error(err)
@@ -19,7 +19,7 @@ package postgresql
 
 // // 	pr := &ProductRepo{db}
 
-// // 	got, err := pr.ListProduct(context.Background(), params.ListProductQueryParams{Limit: 1})
+// // 	got, err := pr.ListProducts(context.Background(), params.ListProductsQueryParams{Limit: 1})
 // // 	assert.NotNil(t, pr)
 // // 	assert.NoError(t, err)
 // // 	assert.NotNil(t, got)
@@ -28,7 +28,7 @@ package postgresql
 // // 	}
 // // }
 
-// // func TestProductRepo_ListProduct_With_Cache_Is_Exist(t *testing.T) {
+// // func TestProductRepo_ListProducts_With_Cache_Is_Exist(t *testing.T) {
 // // 	db, mockSql, err := sqlmock.New()
 // // 	if err != nil {
 // // 		t.Error(err)
@@ -43,7 +43,7 @@ package postgresql
 // // 		AddRow(1, "test", 1, "test", now, nil)
 // // 	mockSql.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
 
-// // 	got, err := pr.ListProduct(context.Background(), params.ListProductQueryParams{Limit: 1})
+// // 	got, err := pr.ListProducts(context.Background(), params.ListProductsQueryParams{Limit: 1})
 // // 	assert.NotNil(t, pr)
 // // 	assert.NoError(t, err)
 // // 	assert.NotNil(t, got)
@@ -52,7 +52,7 @@ package postgresql
 // // 	}
 // // }
 
-// // func TestProductRepo_TotalProduct_With_Cache_Is_Exist(t *testing.T) {
+// // func TestProductRepo_CountProducts_With_Cache_Is_Exist(t *testing.T) {
 // // 	db, mockSql, err := sqlmock.New()
 // // 	if err != nil {
 // // 		t.Error(err)
@@ -61,7 +61,7 @@ package postgresql
 
 // // 	pr := &ProductRepo{db}
 
-// // 	got, err := pr.TotalProduct(context.Background(), params.ListProductQueryParams{Limit: 1}, true)
+// // 	got, err := pr.CountProducts(context.Background(), params.ListProductsQueryParams{Limit: 1}, true)
 // // 	assert.NotNil(t, pr)
 // // 	assert.NoError(t, err)
 // // 	assert.Equal(t, got, int(1))
@@ -70,7 +70,7 @@ package postgresql
 // // 	}
 // // }
 
-// // func TestProductRepo_TotalProduct(t *testing.T) {
+// // func TestProductRepo_CountProducts(t *testing.T) {
 // // 	db, mockSql, err := sqlmock.New()
 // // 	if err != nil {
 // // 		t.Error(err)
@@ -81,7 +81,7 @@ package postgresql
 // // 	rows := sqlmock.NewRows([]string{"count(id)"}).AddRow(1)
 // // 	mockSql.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
 
-// // 	got, err := pr.TotalProduct(context.Background(), params.ListProductQueryParams{Limit: 1}, true)
+// // 	got, err := pr.CountProducts(context.Background(), params.ListProductsQueryParams{Limit: 1}, true)
 // // 	assert.NotNil(t, pr)
 // // 	assert.NoError(t, err)
 // // 	assert.Equal(t, got, int(1))

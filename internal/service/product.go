@@ -14,16 +14,16 @@ import (
 
 type (
 	DbRepo interface {
-		ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error)
-		TotalProduct(ctx context.Context, req params.ListProductQueryParams) (int, error)
+		ListProducts(ctx context.Context, req params.ListProductsQueryParams) ([]domain.Product, error)
+		CountProducts(ctx context.Context, req params.ListProductsQueryParams) (int, error)
 		CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error)
 	}
 
 	CacheRepo interface {
 		FlushAll(ctx context.Context) error
-		SetProduct(ctx context.Context, req params.ListProductQueryParams, totalProducts int, listProducts []domain.Product) error
-		GetProductData(ctx context.Context, req params.ListProductQueryParams) (listProducts []domain.Product, err error)
-		GetProductTotal(ctx context.Context, req params.ListProductQueryParams) (totalProducts int, err error)
+		CacheProducts(ctx context.Context, req params.ListProductsQueryParams, CountProducts int, ListProducts []domain.Product) error
+		GetCachedProducts(ctx context.Context, req params.ListProductsQueryParams) (ListProducts []domain.Product, err error)
+		GetCachedProductCount(ctx context.Context, req params.ListProductsQueryParams) (CountProducts int, err error)
 	}
 
 	ProductService struct {
@@ -39,44 +39,44 @@ func NewProductService(repo DbRepo, cache CacheRepo) *ProductService {
 	}
 }
 
-func (ps *ProductService) ListProduct(ctx context.Context, req params.ListProductQueryParams) (*params.ListProductResponses, error) {
-	products, err := ps.cache.GetProductData(ctx, req)
+func (ps *ProductService) ListProducts(ctx context.Context, req params.ListProductsQueryParams) (*params.ListProductsResponses, error) {
+	products, err := ps.cache.GetCachedProducts(ctx, req)
 	if err != nil && err != redis.Nil {
 		return nil, fmt.Errorf("cache error: %w", err)
 	}
 
 	if len(products) == 0 && err == redis.Nil {
-		products, err = ps.db.ListProduct(ctx, req)
+		products, err = ps.db.ListProducts(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("db error: %w", err)
 		}
 	}
 
-	totalProducts, err := ps.cache.GetProductTotal(ctx, req)
+	countProducts, err := ps.cache.GetCachedProductCount(ctx, req)
 	if err != nil && err != redis.Nil {
 		return nil, fmt.Errorf("cache error (total products): %w", err)
 	}
 
-	if totalProducts == 0 && err == redis.Nil {
-		totalProducts, err = ps.db.TotalProduct(ctx, req)
+	if countProducts == 0 && err == redis.Nil {
+		countProducts, err = ps.db.CountProducts(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("db error (total products): %w", err)
 		}
 	}
 
-	err = ps.cache.SetProduct(ctx, req, totalProducts, products)
+	err = ps.cache.CacheProducts(ctx, req, countProducts, products)
 	if err != nil {
 		return nil, err
 	}
 
-	res := params.ListProductResponses{}
+	res := params.ListProductsResponses{}
 
-	if totalProducts == 0 {
+	if countProducts == 0 {
 		return &res, nil
 	}
 
-	res.TotalData = totalProducts
-	res.TotalPage = (totalProducts + int(req.Limit) - 1) / int(req.Limit)
+	res.TotalData = countProducts
+	res.TotalPage = (countProducts + int(req.Limit) - 1) / int(req.Limit)
 
 	res.Products = make([]params.ProductResponse, 0, len(products))
 	for _, product := range products {
@@ -93,7 +93,7 @@ func (ps *ProductService) ListProduct(ctx context.Context, req params.ListProduc
 }
 
 func (ps *ProductService) CreateProduct(ctx context.Context, req params.CreateProductRequest) (*params.CreateProductResponse, error) {
-	products, err := ps.db.TotalProduct(ctx, params.ListProductQueryParams{Search: req.Name})
+	products, err := ps.db.CountProducts(ctx, params.ListProductsQueryParams{Search: req.Name})
 	if err != nil {
 		return nil, err
 	}

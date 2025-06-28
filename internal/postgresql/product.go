@@ -19,7 +19,7 @@ func NewProductRepo(db *sql.DB) *ProductRepo {
 	return &ProductRepo{db}
 }
 
-func (pr *ProductRepo) listQuery(req params.ListProductQueryParams) squirrel.SelectBuilder {
+func (pr *ProductRepo) listQuery(req params.ListProductsQueryParams) squirrel.SelectBuilder {
 	q := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).Select().From("products p")
 
 	search := strings.TrimSpace(req.Search)
@@ -38,7 +38,7 @@ func (pr *ProductRepo) listQuery(req params.ListProductQueryParams) squirrel.Sel
 	return q
 }
 
-func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQueryParams) ([]domain.Product, error) {
+func (pr *ProductRepo) ListProducts(ctx context.Context, req params.ListProductsQueryParams) ([]domain.Product, error) {
 	q := pr.listQuery(req).Columns("id", "name", "price", "product_type_name", "created_at")
 
 	if req.GetSortMapping() != nil {
@@ -88,19 +88,19 @@ func (pr *ProductRepo) ListProduct(ctx context.Context, req params.ListProductQu
 	return products, nil
 }
 
-func (pr *ProductRepo) TotalProduct(ctx context.Context, req params.ListProductQueryParams) (int, error) {
+func (pr *ProductRepo) CountProducts(ctx context.Context, req params.ListProductsQueryParams) (int, error) {
 	qCount := pr.listQuery(req).Columns("count(id)")
 	qc, args, err := qCount.ToSql()
 	if err != nil {
 		return 0, err
 	}
 
-	var totalProducts int
-	if err = pr.db.QueryRow(qc, args...).Scan(&totalProducts); err != nil {
+	var countProducts int
+	if err = pr.db.QueryRow(qc, args...).Scan(&countProducts); err != nil {
 		return 0, err
 	}
 
-	return totalProducts, nil
+	return countProducts, nil
 }
 
 func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error) {

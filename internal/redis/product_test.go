@@ -13,7 +13,7 @@ package redis
 // 	"github.com/stretchr/testify/assert"
 // )
 
-// // func TestProductRepo_ListProduct(t *testing.T) {
+// // func TestProductRepo_ListProducts(t *testing.T) {
 // // 	db, mockSql, err := sqlmock.New()
 // // 	if err != nil {
 // // 		t.Error(err)
@@ -39,9 +39,9 @@ package redis
 // // 	}
 // // 	productJson, _ := json.Marshal(products)
 
-// // 	mockRedis.ExpectGet("listProduct:").SetVal(string(productJson))
+// // 	mockRedis.ExpectGet("ListProducts:").SetVal(string(productJson))
 
-// // 	got, err := pr.ListProduct(context.Background(), params.ListProductQueryParams{Limit: 1})
+// // 	got, err := pr.ListProducts(context.Background(), params.ListProductsQueryParams{Limit: 1})
 // // 	assert.NotNil(t, pr)
 // // 	assert.NoError(t, err)
 // // 	assert.NotNil(t, got)
@@ -53,7 +53,7 @@ package redis
 // // 	}
 // // }
 
-// // func TestProductRepo_ListProduct_With_Cache_Is_Exist(t *testing.T) {
+// // func TestProductRepo_ListProducts_With_Cache_Is_Exist(t *testing.T) {
 // // 	db, mockSql, err := sqlmock.New()
 // // 	if err != nil {
 // // 		t.Error(err)
@@ -80,14 +80,14 @@ package redis
 // // 	}
 // // 	productJson, _ := json.Marshal(products)
 
-// // 	mockRedis.ExpectGet("listProduct:").RedisNil()
+// // 	mockRedis.ExpectGet("ListProducts:").RedisNil()
 // // 	rows := sqlmock.
 // // 		NewRows([]string{"id", "name", "price", "product_type_name", "created_at", "created_at"}).
 // // 		AddRow(1, "test", 1, "test", now, nil)
 // // 	mockSql.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
-// // 	mockRedis.ExpectSet("listProduct:", string(productJson), time.Second*60).SetVal(string(productJson))
+// // 	mockRedis.ExpectSet("ListProducts:", string(productJson), time.Second*60).SetVal(string(productJson))
 
-// // 	got, err := pr.ListProduct(context.Background(), params.ListProductQueryParams{Limit: 1})
+// // 	got, err := pr.ListProducts(context.Background(), params.ListProductsQueryParams{Limit: 1})
 // // 	assert.NotNil(t, pr)
 // // 	assert.NoError(t, err)
 // // 	assert.NotNil(t, got)
@@ -99,7 +99,7 @@ package redis
 // // 	}
 // // }
 
-// // func TestProductRepo_TotalProduct_With_Cache_Is_Exist(t *testing.T) {
+// // func TestProductRepo_CountProducts_With_Cache_Is_Exist(t *testing.T) {
 // // 	db, mockSql, err := sqlmock.New()
 // // 	if err != nil {
 // // 		t.Error(err)
@@ -108,9 +108,9 @@ package redis
 // // 	dbRedis, mockRedis := redismock.NewClientMock()
 // // 	pr := &ProductRepo{db, dbRedis}
 
-// // 	mockRedis.ExpectGet("totalProduct:").SetVal("1")
+// // 	mockRedis.ExpectGet("CountProducts:").SetVal("1")
 
-// // 	got, err := pr.TotalProduct(context.Background(), params.ListProductQueryParams{Limit: 1}, true)
+// // 	got, err := pr.CountProducts(context.Background(), params.ListProductsQueryParams{Limit: 1}, true)
 // // 	assert.NotNil(t, pr)
 // // 	assert.NoError(t, err)
 // // 	assert.Equal(t, got, int(1))
@@ -122,7 +122,7 @@ package redis
 // // 	}
 // // }
 
-// // func TestProductRepo_TotalProduct(t *testing.T) {
+// // func TestProductRepo_CountProducts(t *testing.T) {
 // // 	db, mockSql, err := sqlmock.New()
 // // 	if err != nil {
 // // 		t.Error(err)
@@ -131,12 +131,12 @@ package redis
 // // 	dbRedis, mockRedis := redismock.NewClientMock()
 // // 	pr := &ProductRepo{db, dbRedis}
 
-// // 	mockRedis.ExpectGet("totalProduct:").RedisNil()
+// // 	mockRedis.ExpectGet("CountProducts:").RedisNil()
 // // 	rows := sqlmock.NewRows([]string{"count(id)"}).AddRow(1)
 // // 	mockSql.ExpectQuery("SELECT (.+) FROM products").WillReturnRows(rows)
-// // 	mockRedis.ExpectSet("totalProduct:", 1, time.Second*60).SetVal("1")
+// // 	mockRedis.ExpectSet("CountProducts:", 1, time.Second*60).SetVal("1")
 
-// // 	got, err := pr.TotalProduct(context.Background(), params.ListProductQueryParams{Limit: 1}, true)
+// // 	got, err := pr.CountProducts(context.Background(), params.ListProductsQueryParams{Limit: 1}, true)
 // // 	assert.NotNil(t, pr)
 // // 	assert.NoError(t, err)
 // // 	assert.Equal(t, got, int(1))

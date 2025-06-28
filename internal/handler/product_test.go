@@ -42,7 +42,7 @@ func TestProductHandler_ProductHandler_Invalid_Method(t *testing.T) {
 	assert.Equal(t, resBody.Error, "invalid method")
 }
 
-func TestProductHandler_ListProductHandler_Error_When_Validate_Query_Params(t *testing.T) {
+func TestProductHandler_ListProductsHandler_Error_When_Validate_Query_Params(t *testing.T) {
 	mc := gomock.NewController(t)
 	mockProductService := mockhandler.NewMockProductService(mc)
 	ph := NewProductHandler(mockProductService)
@@ -64,12 +64,12 @@ func TestProductHandler_ListProductHandler_Error_When_Validate_Query_Params(t *t
 	assert.Equal(t, resBody.Error, "not valid sort format")
 }
 
-func TestProductHandler_ListProductHandler_Error_When_Processing_ListProduct(t *testing.T) {
+func TestProductHandler_ListProductsHandler_Error_When_Processing_ListProducts(t *testing.T) {
 	mc := gomock.NewController(t)
 	mockProductService := mockhandler.NewMockProductService(mc)
 	ph := NewProductHandler(mockProductService)
 	routes := NewRoutes(ph)
-	mockProductService.EXPECT().ListProduct(gomock.Any(), gomock.Any()).Return(nil, errors.New("test"))
+	mockProductService.EXPECT().ListProducts(gomock.Any(), gomock.Any()).Return(nil, errors.New("test"))
 
 	r := httptest.NewRequest(http.MethodGet, "/product", nil)
 	w := httptest.NewRecorder()
@@ -87,12 +87,12 @@ func TestProductHandler_ListProductHandler_Error_When_Processing_ListProduct(t *
 	assert.Equal(t, resBody.Error, "server error")
 }
 
-func TestProductHandler_ListProductHandler_Success(t *testing.T) {
+func TestProductHandler_ListProductsHandler_Success(t *testing.T) {
 	mc := gomock.NewController(t)
 	mockProductService := mockhandler.NewMockProductService(mc)
 	ph := NewProductHandler(mockProductService)
 	routes := NewRoutes(ph)
-	resMock := &params.ListProductResponses{
+	resMock := &params.ListProductsResponses{
 		TotalData: 1,
 		TotalPage: 1,
 		Products: []params.ProductResponse{
@@ -105,7 +105,7 @@ func TestProductHandler_ListProductHandler_Success(t *testing.T) {
 			},
 		},
 	}
-	mockProductService.EXPECT().ListProduct(gomock.Any(), gomock.Any()).Return(resMock, nil)
+	mockProductService.EXPECT().ListProducts(gomock.Any(), gomock.Any()).Return(resMock, nil)
 
 	r := httptest.NewRequest(http.MethodGet, "/product", nil)
 	w := httptest.NewRecorder()
@@ -118,7 +118,7 @@ func TestProductHandler_ListProductHandler_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
 	resBody := struct {
-		Data params.ListProductResponses `json:"data"`
+		Data params.ListProductsResponses `json:"data"`
 	}{}
 	err = json.Unmarshal(body, &resBody)
 	assert.NoError(t, err)
