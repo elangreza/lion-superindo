@@ -3,9 +3,8 @@ module github.com/elangreza14/superindo
 go 1.22.2
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/go-redis/redismock/v9 v9.2.0
+	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/spf13/viper v1.19.0

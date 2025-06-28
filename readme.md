@@ -41,7 +41,7 @@ indo, dengan spesifikasi sebagai berikut :
 3. Try retrieving products:
 
    ```curl
-  curl --location 'localhost:8080/product?page=1&search=pe&type=buah&type=proteinas&sort=id%3Aasc'
+    curl --location 'localhost:8080/product?page=1&search=pe&type=buah&type=proteinas&sort=id%3Aasc'
    ```
 
 ## API Documentation
