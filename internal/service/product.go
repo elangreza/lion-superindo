@@ -45,11 +45,13 @@ func (ps *ProductService) ListProducts(ctx context.Context, req params.ListProdu
 		return nil, fmt.Errorf("cache error: %w", err)
 	}
 
+	var isListProductsFromDB bool
 	if len(products) == 0 && err == redis.Nil {
 		products, err = ps.db.ListProducts(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("db error: %w", err)
 		}
+		isListProductsFromDB = true
 	}
 
 	countProducts, err := ps.cache.GetCachedProductCount(ctx, req)
@@ -57,16 +59,22 @@ func (ps *ProductService) ListProducts(ctx context.Context, req params.ListProdu
 		return nil, fmt.Errorf("cache error (total products): %w", err)
 	}
 
+	var isCountProductsFromDB bool
 	if countProducts == 0 && err == redis.Nil {
 		countProducts, err = ps.db.CountProducts(ctx, req)
 		if err != nil {
 			return nil, fmt.Errorf("db error (total products): %w", err)
 		}
+		isCountProductsFromDB = true
 	}
 
-	err = ps.cache.CacheProducts(ctx, req, countProducts, products)
-	if err != nil {
-		return nil, err
+	// If both products and countProducts are from the database, cache them
+	// If either products or countProducts is from the cache, we do not cache them again
+	if isListProductsFromDB || isCountProductsFromDB {
+		err = ps.cache.CacheProducts(ctx, req, countProducts, products)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	res := params.ListProductsResponses{}

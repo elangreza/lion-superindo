@@ -24,11 +24,9 @@ import (
 )
 
 // TODO google wire
-// TODO finish unit test
+// TODO update readme, separate docs
 // TODO swagger or openapi
 // TODO POSTMAN collection
-// TODO custom error handling
-// TODO move into newest git repository
 // TODO add ratelimiter
 
 func main() {

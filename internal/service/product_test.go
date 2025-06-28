@@ -126,6 +126,43 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 
 		suite.MockCacheRepo.EXPECT().GetCachedProducts(ctx, req).Return(ListProducts, nil)
 		suite.MockCacheRepo.EXPECT().GetCachedProductCount(ctx, req).Return(1, nil)
+
+		got, err := suite.Ps.ListProducts(ctx, req)
+		suite.NoError(err)
+		suite.NotNil(got)
+		suite.Equal(got.TotalData, 1)
+		suite.Equal(got.TotalPage, 1)
+	})
+
+	suite.Run("success without using cached data", func() {
+		req := params.ListProductsQueryParams{
+			Search: "",
+			Types:  []string{},
+			PaginationParams: params.PaginationParams{
+				Sorts: []string{},
+				Limit: 2,
+				Page:  1,
+			},
+		}
+		ctx := context.Background()
+
+		ListProducts := []domain.Product{
+			{
+				ID:    1,
+				Name:  "milk",
+				Price: 20000,
+				ProductType: domain.ProductType{
+					Name:      "dairy",
+					CreatedAt: time.Now(),
+				},
+				CreatedAt: time.Now(),
+			},
+		}
+
+		suite.MockCacheRepo.EXPECT().GetCachedProducts(ctx, req).Return([]domain.Product{}, redis.Nil)
+		suite.MockDbRepo.EXPECT().ListProducts(ctx, req).Return(ListProducts, nil)
+		suite.MockCacheRepo.EXPECT().GetCachedProductCount(ctx, req).Return(0, redis.Nil)
+		suite.MockDbRepo.EXPECT().CountProducts(ctx, req).Return(1, nil)
 		suite.MockCacheRepo.EXPECT().CacheProducts(ctx, req, 1, ListProducts).Return(nil)
 
 		got, err := suite.Ps.ListProducts(ctx, req)
@@ -133,6 +170,41 @@ func (suite *TestProductServiceSuite) TestProductService_GetProducts() {
 		suite.NotNil(got)
 		suite.Equal(got.TotalData, 1)
 		suite.Equal(got.TotalPage, 1)
+	})
+
+	suite.Run("success with using cached data", func() {
+		req := params.ListProductsQueryParams{
+			Search: "",
+			Types:  []string{},
+			PaginationParams: params.PaginationParams{
+				Sorts: []string{},
+				Limit: 2,
+				Page:  1,
+			},
+		}
+		ctx := context.Background()
+
+		ListProducts := []domain.Product{
+			{
+				ID:    1,
+				Name:  "milk",
+				Price: 20000,
+				ProductType: domain.ProductType{
+					Name:      "dairy",
+					CreatedAt: time.Now(),
+				},
+				CreatedAt: time.Now(),
+			},
+		}
+
+		suite.MockCacheRepo.EXPECT().GetCachedProducts(ctx, req).Return(ListProducts, nil)
+		suite.MockCacheRepo.EXPECT().GetCachedProductCount(ctx, req).Return(0, nil)
+
+		got, err := suite.Ps.ListProducts(ctx, req)
+		suite.NoError(err)
+		suite.NotNil(got)
+		suite.Equal(got.TotalData, 0)
+		suite.Equal(got.TotalPage, 0)
 	})
 }
 
