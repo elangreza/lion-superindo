@@ -44,23 +44,29 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			log.Fatalf("HTTP server ListenAndServe: %v", err)
+			log.Fatalf("HTTP server ListenAndServe: %w", err)
 		}
 	}()
 
 	slog.Info("server started", "port", cfg.HTTP_PORT)
 
 	<-gracefulShutdown(context.Background(), 5*time.Second,
-		func(ctx context.Context) error {
-			return srv.Shutdown(ctx)
-		},
-		func(ctx context.Context) error {
-			return deps.DB.Close()
-		},
-		func(ctx context.Context) error {
-			deps.RedisClient.Close()
-			return nil
-		},
+		operation{
+			name: "server",
+			shutdownFunc: func(ctx context.Context) error {
+				return srv.Shutdown(ctx)
+			}},
+		operation{
+			name: "postgres",
+			shutdownFunc: func(ctx context.Context) error {
+				return deps.DB.Close()
+			}},
+		operation{
+			name: "redis",
+			shutdownFunc: func(ctx context.Context) error {
+				deps.RedisClient.Close()
+				return nil
+			}},
 	)
 }
 
@@ -70,7 +76,10 @@ func errChecker(err error) {
 	}
 }
 
-type operation func(ctx context.Context) error
+type operation struct {
+	name         string
+	shutdownFunc func(ctx context.Context) error
+}
 
 func gracefulShutdown(ctx context.Context, timeout time.Duration, ops ...operation) <-chan struct{} {
 	wait := make(chan struct{})
@@ -97,14 +106,15 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops ...operati
 			wg.Add(1)
 			go func(key int, op operation) {
 				defer wg.Done()
-				processName := fmt.Sprintf("process %d", key)
 
-				if err := op(ctx); err != nil {
-					slog.Error(processName, "err", err.Error())
+				slog.Info(op.name, "shutdown", "started")
+
+				if err := op.shutdownFunc(ctx); err != nil {
+					slog.Error(op.name, "err", err.Error())
 					return
 				}
 
-				slog.Info(processName, "message", "success")
+				slog.Info(op.name, "shutdown", "finished")
 			}(key, op)
 		}
 

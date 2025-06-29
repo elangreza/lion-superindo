@@ -7,9 +7,7 @@
 package main
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
 	"github.com/elangreza14/lion-superindo/cmd/server/config"
 	"github.com/elangreza14/lion-superindo/internal/handler"
 	"github.com/elangreza14/lion-superindo/internal/postgresql"
@@ -28,12 +26,12 @@ import (
 // Injectors from wire.go:
 
 func InitializeProductHandler(cfg *config.Config) (*ProductHandlerDeps, error) {
-	db, err := setupDB(cfg)
+	db, err := config.SetupDB(cfg)
 	if err != nil {
 		return nil, err
 	}
 	postgresRepo := postgresql.NewRepo(db)
-	client, err := setupCache(cfg)
+	client, err := config.SetupCache(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -57,43 +55,4 @@ type ProductHandlerDeps struct {
 	RedisClient *redis2.Client
 }
 
-var productSet = wire.NewSet(
-	setupDB,
-	setupCache, postgresql.NewRepo, wire.Bind(new(service.DbRepo), new(*postgresql.PostgresRepo)), redis.NewRepo, wire.Bind(new(service.CacheRepo), new(*redis.RedisRepo)), service.NewProductService, wire.Bind(new(handler.ProductService), new(*service.ProductService)), handler.NewProductHandler, handler.NewRoutes,
-)
-
-func setupDB(cfg *config.Config) (*sql.DB, error) {
-	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		cfg.POSTGRES_USER,
-		cfg.POSTGRES_PASSWORD,
-		cfg.POSTGRES_HOSTNAME,
-		cfg.POSTGRES_PORT,
-		cfg.POSTGRES_DB,
-		cfg.POSTGRES_SSL,
-	)
-
-	db, err := sql.Open("postgres", connString)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
-func setupCache(cfg *config.Config) (*redis2.Client, error) {
-	redisClient := redis2.NewClient(&redis2.Options{
-		Addr: fmt.Sprintf("%s:%s", cfg.REDIS_HOSTNAME, cfg.REDIS_PORT),
-	})
-
-	err := redisClient.Ping(context.Background()).Err()
-	if err != nil {
-		return nil, err
-	}
-
-	return redisClient, nil
-}
+var productSet = wire.NewSet(config.SetupDB, config.SetupCache, postgresql.NewRepo, wire.Bind(new(service.DbRepo), new(*postgresql.PostgresRepo)), redis.NewRepo, wire.Bind(new(service.CacheRepo), new(*redis.RedisRepo)), service.NewProductService, wire.Bind(new(handler.ProductService), new(*service.ProductService)), handler.NewProductHandler, handler.NewRoutes)
