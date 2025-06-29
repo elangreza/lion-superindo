@@ -39,7 +39,7 @@ type ListProductsQueryParams struct {
 func (pqr *ListProductsQueryParams) Validate() error {
 
 	if err := pqr.PaginationParams.Validate(); err != nil {
-		return errs.ValidationError{Err: err}
+		return errs.ValidationError{Message: err.Error()}
 	}
 
 	validSortKeys := map[string]bool{
@@ -47,7 +47,7 @@ func (pqr *ListProductsQueryParams) Validate() error {
 	}
 	for sortKey := range pqr.GetSortMapping() {
 		if !validSortKeys[sortKey] {
-			return errs.ValidationError{Message: fmt.Sprint("%s not valid sort key", sortKey)}
+			return errs.ValidationError{Message: fmt.Sprintf("%s not valid sort key", sortKey)}
 		}
 	}
 

@@ -5,7 +5,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -97,7 +96,7 @@ func (ph *ProductHandler) ListProductsHandler(w http.ResponseWriter, r *http.Req
 func (ph *ProductHandler) CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 	body := params.CreateProductRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		Error(w, http.StatusBadRequest, errs.ValidationError{Err: err})
+		Error(w, http.StatusBadRequest, errs.ValidationError{Message: err.Error()})
 		return
 	}
 
@@ -122,6 +121,8 @@ func (ph *ProductHandler) ProductHandler(w http.ResponseWriter, r *http.Request)
 	case http.MethodPost:
 		ph.CreateProductHandler(w, r)
 	default:
-		Error(w, http.StatusMethodNotAllowed, errors.New("invalid method"))
+		Error(w, http.StatusMethodNotAllowed, errs.MethodNotAllowedError{
+			Method: r.Method,
+		})
 	}
 }

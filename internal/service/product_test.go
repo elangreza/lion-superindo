@@ -249,7 +249,7 @@ func (suite *TestProductServiceSuite) TestProductService_CreateProduct() {
 			Search: "melon",
 		}).Return(0, nil)
 		suite.MockDbRepo.EXPECT().CreateProduct(ctx, req).Return(6, nil)
-		suite.MockCacheRepo.EXPECT().FlushAll(ctx).Return(errors.New("test"))
+		suite.MockCacheRepo.EXPECT().FlushAllProducts(ctx).Return(errors.New("test"))
 
 		_, err := suite.Ps.CreateProduct(ctx, req)
 		suite.Error(err)
@@ -262,7 +262,7 @@ func (suite *TestProductServiceSuite) TestProductService_CreateProduct() {
 			Search: "melon",
 		}).Return(0, nil)
 		suite.MockDbRepo.EXPECT().CreateProduct(ctx, req).Return(6, nil)
-		suite.MockCacheRepo.EXPECT().FlushAll(ctx).Return(nil)
+		suite.MockCacheRepo.EXPECT().FlushAllProducts(ctx).Return(nil)
 
 		res, err := suite.Ps.CreateProduct(ctx, req)
 		suite.NoError(err)

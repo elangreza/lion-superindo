@@ -11,15 +11,7 @@ import (
 	"github.com/elangreza14/lion-superindo/internal/params"
 )
 
-type ProductRepo struct {
-	db *sql.DB
-}
-
-func NewProductRepo(db *sql.DB) *ProductRepo {
-	return &ProductRepo{db}
-}
-
-func (pr *ProductRepo) listQuery(req params.ListProductsQueryParams) squirrel.SelectBuilder {
+func (pr *PostgresRepo) listQuery(req params.ListProductsQueryParams) squirrel.SelectBuilder {
 	q := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).Select().From("products p")
 
 	search := strings.TrimSpace(req.Search)
@@ -38,7 +30,7 @@ func (pr *ProductRepo) listQuery(req params.ListProductsQueryParams) squirrel.Se
 	return q
 }
 
-func (pr *ProductRepo) ListProducts(ctx context.Context, req params.ListProductsQueryParams) ([]domain.Product, error) {
+func (pr *PostgresRepo) ListProducts(ctx context.Context, req params.ListProductsQueryParams) ([]domain.Product, error) {
 	q := pr.listQuery(req).Columns("id", "name", "price", "product_type_name", "created_at")
 
 	if req.GetSortMapping() != nil {
@@ -88,7 +80,7 @@ func (pr *ProductRepo) ListProducts(ctx context.Context, req params.ListProducts
 	return products, nil
 }
 
-func (pr *ProductRepo) CountProducts(ctx context.Context, req params.ListProductsQueryParams) (int, error) {
+func (pr *PostgresRepo) CountProducts(ctx context.Context, req params.ListProductsQueryParams) (int, error) {
 	qCount := pr.listQuery(req).Columns("count(id)")
 	qc, args, err := qCount.ToSql()
 	if err != nil {
@@ -103,7 +95,7 @@ func (pr *ProductRepo) CountProducts(ctx context.Context, req params.ListProduct
 	return countProducts, nil
 }
 
-func (pr *ProductRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error) {
+func (pr *PostgresRepo) CreateProduct(ctx context.Context, req params.CreateProductRequest) (int, error) {
 	var id int
 	err := runInTx(ctx, pr.db, func(tx *sql.Tx) error {
 		qInsertProductType := `INSERT INTO product_types("name") VALUES($1) ON CONFLICT(name) DO NOTHING;`

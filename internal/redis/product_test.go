@@ -14,7 +14,7 @@ import (
 
 func TestProductRepo_CacheProducts(t *testing.T) {
 	dbRedis, mockRedis := redismock.NewClientMock()
-	pr := NewProductRepo(dbRedis)
+	pr := NewRepo(dbRedis)
 
 	listProducts := []domain.Product{{ID: 1}}
 
@@ -39,7 +39,7 @@ func TestProductRepo_CacheProducts(t *testing.T) {
 
 func TestProductRepo_GetCachedProducts(t *testing.T) {
 	dbRedis, mockRedis := redismock.NewClientMock()
-	pr := NewProductRepo(dbRedis)
+	pr := NewRepo(dbRedis)
 
 	listProducts := []domain.Product{{ID: 1}}
 
@@ -99,7 +99,7 @@ func TestProductRepo_GetCachedProducts(t *testing.T) {
 
 func TestProductRepo_GetCachedProductCount(t *testing.T) {
 	dbRedis, mockRedis := redismock.NewClientMock()
-	pr := NewProductRepo(dbRedis)
+	pr := NewRepo(dbRedis)
 
 	req := params.ListProductsQueryParams{}
 	req.Validate()
@@ -156,9 +156,9 @@ func TestProductRepo_GetCachedProductCount(t *testing.T) {
 	}
 }
 
-func TestProductRepo_FlushAll(t *testing.T) {
+func TestProductRepo_FlushAllProducts(t *testing.T) {
 	dbRedis, mockRedis := redismock.NewClientMock()
-	pr := NewProductRepo(dbRedis)
+	pr := NewRepo(dbRedis)
 	pattern := prefixProduct + "*"
 
 	tableTest := []struct {
@@ -194,7 +194,7 @@ func TestProductRepo_FlushAll(t *testing.T) {
 	for _, tt := range tableTest {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock(mockRedis)
-			err := pr.FlushAll(context.Background())
+			err := pr.FlushAllProducts(context.Background())
 			if tt.expectErr {
 				assert.Error(t, err)
 			} else {

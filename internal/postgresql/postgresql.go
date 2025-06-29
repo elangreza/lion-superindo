@@ -6,6 +6,14 @@ import (
 	"fmt"
 )
 
+type PostgresRepo struct {
+	db *sql.DB
+}
+
+func NewRepo(db *sql.DB) *PostgresRepo {
+	return &PostgresRepo{db}
+}
+
 func runInTx(ctx context.Context, db *sql.DB, fn func(tx *sql.Tx) error) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {

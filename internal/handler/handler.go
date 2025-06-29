@@ -36,6 +36,10 @@ func Error(w http.ResponseWriter, status int, err error) {
 		slog.Error("controller", "request", err.Error())
 		status = errs.ValidationError{}.HttpStatusCode()
 		apiErr.Message = err.Error()
+	case errors.As(err, &errs.MethodNotAllowedError{}):
+		slog.Error("controller", "request", err.Error())
+		status = errs.MethodNotAllowedError{}.HttpStatusCode()
+		apiErr.Message = err.Error()
 	default:
 		slog.Error("controller", "service", err.Error())
 		status = http.StatusInternalServerError

@@ -19,4 +19,7 @@ swag:
 	swag fmt
 	swag init -g cmd/server/main.go
 
+wire:
+	wire gen ./cmd/server/
+
 .PHONY: run gen test up down swag

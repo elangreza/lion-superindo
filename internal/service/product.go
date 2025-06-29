@@ -20,7 +20,7 @@ type (
 	}
 
 	CacheRepo interface {
-		FlushAll(ctx context.Context) error
+		FlushAllProducts(ctx context.Context) error
 		CacheProducts(ctx context.Context, req params.ListProductsQueryParams, countProducts int, listProducts []domain.Product) error
 		GetCachedProducts(ctx context.Context, req params.ListProductsQueryParams) (listProducts []domain.Product, err error)
 		GetCachedProductCount(ctx context.Context, req params.ListProductsQueryParams) (countProducts int, err error)
@@ -117,7 +117,7 @@ func (ps *ProductService) CreateProduct(ctx context.Context, req params.CreatePr
 		return nil, err
 	}
 
-	if err := ps.cache.FlushAll(ctx); err != nil {
+	if err := ps.cache.FlushAllProducts(ctx); err != nil {
 		return nil, fmt.Errorf("failed to flush cache: %w", err)
 	}
 

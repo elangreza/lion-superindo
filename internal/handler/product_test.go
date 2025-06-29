@@ -39,7 +39,7 @@ func TestProductHandler_ProductHandler_Invalid_Method(t *testing.T) {
 	resBody := mockErrorResBody
 	err = json.Unmarshal(body, &resBody)
 	assert.NoError(t, err)
-	assert.Equal(t, resBody.Error, "invalid method")
+	assert.Equal(t, resBody.Error, "method PATCH not allowed")
 }
 
 func TestProductHandler_ListProductsHandler_Error_When_Validate_Query_Params(t *testing.T) {
@@ -61,7 +61,7 @@ func TestProductHandler_ListProductsHandler_Error_When_Validate_Query_Params(t *
 	resBody := mockErrorResBody
 	err = json.Unmarshal(body, &resBody)
 	assert.NoError(t, err)
-	assert.Equal(t, resBody.Error, "not valid sort format")
+	assert.Equal(t, resBody.Error, "validation error: test is not valid sort format")
 }
 
 func TestProductHandler_ListProductsHandler_Error_When_Processing_ListProducts(t *testing.T) {
@@ -154,7 +154,7 @@ func TestProductHandler_CreateProductHandler_Error_When_Validate_Query(t *testin
 	resBody := mockErrorResBody
 	err = json.Unmarshal(body, &resBody)
 	assert.NoError(t, err)
-	assert.Equal(t, resBody.Error, "price cannot be negative")
+	assert.Equal(t, resBody.Error, "validation error: price cannot be negative")
 }
 
 func TestProductHandler_CreateProductHandler_Error_When_Processing_CreateProduct(t *testing.T) {

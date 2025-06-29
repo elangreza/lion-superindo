@@ -17,29 +17,32 @@ import (
 	"github.com/elangreza14/lion-superindo/internal/service"
 	"github.com/google/wire"
 	redis2 "github.com/redis/go-redis/v9"
+	"net/http"
 )
 
 import (
+	_ "github.com/elangreza14/lion-superindo/docs"
 	_ "github.com/lib/pq"
 )
 
 // Injectors from wire.go:
 
 func InitializeProductHandler(cfg *config.Config) (*ProductHandlerDeps, error) {
-	db, err := SetupDB(cfg)
+	db, err := setupDB(cfg)
 	if err != nil {
 		return nil, err
 	}
-	productRepo := postgresql.NewProductRepo(db)
-	client, err := SetupCache(cfg)
+	postgresRepo := postgresql.NewRepo(db)
+	client, err := setupCache(cfg)
 	if err != nil {
 		return nil, err
 	}
-	redisProductRepo := redis.NewProductRepo(client)
-	productService := service.NewProductService(productRepo, redisProductRepo)
+	redisRepo := redis.NewRepo(client)
+	productService := service.NewProductService(postgresRepo, redisRepo)
 	productHandler := handler.NewProductHandler(productService)
+	serveMux := handler.NewRoutes(productHandler)
 	productHandlerDeps := &ProductHandlerDeps{
-		Handler:     productHandler,
+		Mux:         serveMux,
 		DB:          db,
 		RedisClient: client,
 	}
@@ -49,17 +52,17 @@ func InitializeProductHandler(cfg *config.Config) (*ProductHandlerDeps, error) {
 // wire.go:
 
 type ProductHandlerDeps struct {
-	Handler     *handler.ProductHandler
+	Mux         *http.ServeMux
 	DB          *sql.DB
 	RedisClient *redis2.Client
 }
 
 var productSet = wire.NewSet(
-	SetupDB,
-	SetupCache, postgresql.NewProductRepo, wire.Bind(new(service.DbRepo), new(*postgresql.ProductRepo)), redis.NewProductRepo, wire.Bind(new(service.CacheRepo), new(*redis.ProductRepo)), service.NewProductService, wire.Bind(new(handler.ProductService), new(*service.ProductService)), handler.NewProductHandler,
+	setupDB,
+	setupCache, postgresql.NewRepo, wire.Bind(new(service.DbRepo), new(*postgresql.PostgresRepo)), redis.NewRepo, wire.Bind(new(service.CacheRepo), new(*redis.RedisRepo)), service.NewProductService, wire.Bind(new(handler.ProductService), new(*service.ProductService)), handler.NewProductHandler, handler.NewRoutes,
 )
 
-func SetupDB(cfg *config.Config) (*sql.DB, error) {
+func setupDB(cfg *config.Config) (*sql.DB, error) {
 	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		cfg.POSTGRES_USER,
 		cfg.POSTGRES_PASSWORD,
@@ -82,7 +85,7 @@ func SetupDB(cfg *config.Config) (*sql.DB, error) {
 	return db, nil
 }
 
-func SetupCache(cfg *config.Config) (*redis2.Client, error) {
+func setupCache(cfg *config.Config) (*redis2.Client, error) {
 	redisClient := redis2.NewClient(&redis2.Options{
 		Addr: fmt.Sprintf("%s:%s", cfg.REDIS_HOSTNAME, cfg.REDIS_PORT),
 	})

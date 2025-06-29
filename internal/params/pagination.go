@@ -41,7 +41,7 @@ func (pqr *PaginationParams) Validate() error {
 		for _, sortRaw := range newSorts {
 			parts := strings.Split(sortRaw, ":")
 			if len(parts) != 2 {
-				return fmt.Errorf("not valid sort format: %s", sortRaw)
+				return fmt.Errorf("%s is not valid sort format", sortRaw)
 			}
 
 			value := strings.ToLower(strings.TrimSpace(parts[0]))

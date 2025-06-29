@@ -125,18 +125,18 @@ func (mr *MockCacheRepoMockRecorder) CacheProducts(ctx, req, CountProducts, List
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CacheProducts", reflect.TypeOf((*MockCacheRepo)(nil).CacheProducts), ctx, req, CountProducts, ListProducts)
 }
 
-// FlushAll mocks base method.
-func (m *MockCacheRepo) FlushAll(ctx context.Context) error {
+// FlushAllProducts mocks base method.
+func (m *MockCacheRepo) FlushAllProducts(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FlushAll", ctx)
+	ret := m.ctrl.Call(m, "FlushAllProducts", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// FlushAll indicates an expected call of FlushAll.
-func (mr *MockCacheRepoMockRecorder) FlushAll(ctx any) *gomock.Call {
+// FlushAllProducts indicates an expected call of FlushAllProducts.
+func (mr *MockCacheRepoMockRecorder) FlushAllProducts(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FlushAll", reflect.TypeOf((*MockCacheRepo)(nil).FlushAll), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FlushAllProducts", reflect.TypeOf((*MockCacheRepo)(nil).FlushAllProducts), ctx)
 }
 
 // GetCachedProductCount mocks base method.

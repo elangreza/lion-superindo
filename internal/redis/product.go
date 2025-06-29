@@ -8,13 +8,6 @@ import (
 
 	"github.com/elangreza14/lion-superindo/internal/domain"
 	"github.com/elangreza14/lion-superindo/internal/params"
-	"github.com/redis/go-redis/v9"
-)
-
-type (
-	ProductRepo struct {
-		cache *redis.Client
-	}
 )
 
 const (
@@ -22,13 +15,7 @@ const (
 	prefixProduct     = "product:"
 )
 
-func NewProductRepo(cache *redis.Client) *ProductRepo {
-	return &ProductRepo{
-		cache: cache,
-	}
-}
-
-func (pr *ProductRepo) CacheProducts(ctx context.Context, req params.ListProductsQueryParams, countProducts int, listProducts []domain.Product) error {
+func (pr *RedisRepo) CacheProducts(ctx context.Context, req params.ListProductsQueryParams, countProducts int, listProducts []domain.Product) error {
 	keyRaw := prefixProduct + req.GetParamsKey()
 
 	str, err := json.Marshal(listProducts)
@@ -43,7 +30,7 @@ func (pr *ProductRepo) CacheProducts(ctx context.Context, req params.ListProduct
 	return pr.cache.HSet(ctx, keyRaw, products).Err()
 }
 
-func (pr *ProductRepo) GetCachedProducts(ctx context.Context, req params.ListProductsQueryParams) ([]domain.Product, error) {
+func (pr *RedisRepo) GetCachedProducts(ctx context.Context, req params.ListProductsQueryParams) ([]domain.Product, error) {
 	keyRaw := prefixProduct + req.GetParamsKey()
 
 	res, err := pr.cache.HGet(ctx, keyRaw, req.GetOrderingKey()).Result()
@@ -58,7 +45,7 @@ func (pr *ProductRepo) GetCachedProducts(ctx context.Context, req params.ListPro
 	return listProducts, nil
 }
 
-func (pr *ProductRepo) GetCachedProductCount(ctx context.Context, req params.ListProductsQueryParams) (int, error) {
+func (pr *RedisRepo) GetCachedProductCount(ctx context.Context, req params.ListProductsQueryParams) (int, error) {
 	keyRaw := prefixProduct + req.GetParamsKey()
 
 	res, err := pr.cache.HGet(ctx, keyRaw, countProductsKeys).Result()
@@ -73,7 +60,7 @@ func (pr *ProductRepo) GetCachedProductCount(ctx context.Context, req params.Lis
 	return total, nil
 }
 
-func (pr *ProductRepo) FlushAll(ctx context.Context) error {
+func (pr *RedisRepo) FlushAllProducts(ctx context.Context) error {
 	var cursor uint64
 	pattern := prefixProduct + "*"
 	for {

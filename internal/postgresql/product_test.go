@@ -19,7 +19,7 @@ func TestProductRepo(t *testing.T) {
 	}
 	defer db.Close()
 
-	pr := NewProductRepo(db)
+	pr := NewRepo(db)
 	now := time.Now()
 
 	testTable := []struct {
@@ -130,7 +130,7 @@ func TestProductRepo_CountProducts(t *testing.T) {
 		t.Error(err)
 	}
 	defer db.Close()
-	pr := NewProductRepo(db)
+	pr := NewRepo(db)
 
 	testTable := []struct {
 		name        string
@@ -197,7 +197,7 @@ func TestProductRepo_CreateProduct(t *testing.T) {
 		t.Error(err)
 	}
 	defer dbSql.Close()
-	pr := &ProductRepo{dbSql}
+	pr := &PostgresRepo{dbSql}
 
 	testTable := []struct {
 		name        string

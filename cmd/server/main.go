@@ -19,9 +19,6 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// TODO add ratelimiter
-// TODO refactor repo
-
 // @title			Lion Superindo product API
 // @version		1.0
 // @description	API documentation for Lion Superindo test
@@ -34,8 +31,7 @@ func main() {
 	deps, err := InitializeProductHandler(cfg)
 	errChecker(err)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/product", deps.Handler.ProductHandler)
+	mux := deps.Mux
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	srv := &http.Server{
@@ -73,42 +69,6 @@ func errChecker(err error) {
 		log.Fatal(err)
 	}
 }
-
-// func setupDB(cfg *config.Config) (*sql.DB, error) {
-// 	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-// 		cfg.POSTGRES_USER,
-// 		cfg.POSTGRES_PASSWORD,
-// 		cfg.POSTGRES_HOSTNAME,
-// 		cfg.POSTGRES_PORT,
-// 		cfg.POSTGRES_DB,
-// 		cfg.POSTGRES_SSL,
-// 	)
-
-// 	db, err := sql.Open("postgres", connString)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	err = db.Ping()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return db, nil
-// }
-
-// func setupCache(cfg *config.Config) (*redis.Client, error) {
-// 	redisClient := redis.NewClient(&redis.Options{
-// 		Addr: fmt.Sprintf("%s:%s", cfg.REDIS_HOSTNAME, cfg.REDIS_PORT),
-// 	})
-
-// 	err := redisClient.Ping(context.Background()).Err()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return redisClient, nil
-// }
 
 type operation func(ctx context.Context) error
 
