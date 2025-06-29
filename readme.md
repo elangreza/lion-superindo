@@ -14,21 +14,21 @@ indo, dengan spesifikasi sebagai berikut :
 - [x] Language : Golang
 - [x] Database : SQL / NoSQL + Seeder + migration
 - [x] Cache : Redis
-- [ ] Dependency Injection : wire (Optional)
+- [x] Dependency Injection : wire (Optional)
 - [x] Unittest (Optional)
 - [x] Docker (Optional)
 
 ## How to Run the Application
 
-1. Run the application:
+1. **Start the application:**
 
    ```sh
    make up
    ```
 
-   the application will build within docker compose, and automatically seed the data into DB
+   This will build the application with Docker Compose and automatically seed the database.
 
-2. **Add a Product**
+2. **Add a Product:**
 
    ```sh
    curl --location 'http://localhost:8080/product' \
@@ -40,20 +40,28 @@ indo, dengan spesifikasi sebagai berikut :
      }'
    ```
 
-   👉 See the [POST `/product` API documentation](#post-product) for more details.
+   See the [POST `/product` API documentation](#post-product) or [Swagger API](http://localhost:8080/swagger/index.html#/product/post_product) for details.
 
-3. **Retrieve Products**
+3. **Retrieve Products:**
 
    ```sh
    curl --location 'http://localhost:8080/product?page=1&search=pe&type=buah&type=proteinas&sort=id:asc'
    ```
 
-   👉 See the [GET `/product` API documentation](#get-product) for more details.
+   See the [GET `/product` API documentation](#get-product) or [Swagger API](http://localhost:8080/swagger/index.html#/product/get_product) for details.
 
-4. To shutdown the stack:
+4. **API Documentation:**
+
+   See the [API documentation section](#api-documentation) for docs
+
+   or
+
+   see the [Swagger UI](http://localhost:8080/swagger/index.html) for trying api directly.
+
+5. **Shutdown the stack:**
 
    ```sh
-    make down
+   make down
    ```
 
 ## API Documentation

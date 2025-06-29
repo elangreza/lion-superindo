@@ -14,12 +14,19 @@ import (
 
 	"github.com/elangreza14/lion-superindo/cmd/server/config"
 
+	_ "github.com/elangreza14/lion-superindo/docs"
 	_ "github.com/lib/pq"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // TODO add ratelimiter
-// TODO swagger https://github.com/swaggo/swag
+// TODO refactor repo
 
+// @title			Lion Superindo product API
+// @version		1.0
+// @description	API documentation for Lion Superindo test
+// @host			localhost:8080
+// @BasePath		/
 func main() {
 	cfg, err := config.LoadConfig()
 	errChecker(err)
@@ -29,6 +36,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/product", deps.Handler.ProductHandler)
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	srv := &http.Server{
 		Addr:           fmt.Sprintf(":%s", cfg.HTTP_PORT),

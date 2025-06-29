@@ -15,4 +15,8 @@ up:
 down:
 	docker compose down
 
-.PHONY: migrate migrate-create run gen up down test
+swag:
+	swag fmt
+	swag init -g cmd/server/main.go
+
+.PHONY: run gen test up down swag

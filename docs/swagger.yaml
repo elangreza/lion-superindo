@@ -1,0 +1,138 @@
+basePath: /
+definitions:
+  handler.APIError:
+    properties:
+      error:
+        type: string
+    type: object
+  params.CreateProductRequest:
+    properties:
+      name:
+        type: string
+      price:
+        type: integer
+      type:
+        type: string
+    type: object
+  params.CreateProductResponse:
+    properties:
+      id:
+        type: integer
+    type: object
+  params.ListProductsResponses:
+    properties:
+      products:
+        items:
+          $ref: '#/definitions/params.ProductResponse'
+        type: array
+      total_data:
+        type: integer
+      total_page:
+        type: integer
+    type: object
+  params.ProductResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      type:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API documentation for Lion Superindo test
+  title: Lion Superindo product API
+  version: "1.0"
+paths:
+  /product:
+    get:
+      consumes:
+      - application/json
+      description: Get all products
+      parameters:
+      - description: Page number, default 1
+        in: query
+        name: page
+        type: integer
+      - description: Limit number of products, default 10
+        in: query
+        name: limit
+        type: integer
+      - description: Search by product name or id
+        in: query
+        name: search
+        type: string
+      - collectionFormat: csv
+        description: Filter by product type. Repeat param for multiple values (e.g.
+          type=buah&type=snack) or use comma-separated (type=buah,snack).
+        in: query
+        items:
+          type: string
+        name: type
+        type: array
+      - collectionFormat: csv
+        description: 'Sort by field. Values can be created_at:asc, created_at:desc,
+          price:asc, price:desc, name:asc, name:desc, id:asc, id:desc. Default: id:asc'
+        in: query
+        items:
+          type: string
+        name: sort
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/params.ListProductsResponses'
+        "400":
+          description: validation error
+          schema:
+            $ref: '#/definitions/handler.APIError'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/handler.APIError'
+      summary: Get products
+      tags:
+      - product
+    post:
+      consumes:
+      - application/json
+      description: Create a new product
+      parameters:
+      - description: Product data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/params.CreateProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/params.CreateProductResponse'
+        "400":
+          description: validation error
+          schema:
+            $ref: '#/definitions/handler.APIError'
+        "409":
+          description: conflict error, if product with same name already exists
+          schema:
+            $ref: '#/definitions/handler.APIError'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/handler.APIError'
+      summary: Create product
+      tags:
+      - product
+swagger: "2.0"

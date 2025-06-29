@@ -2,10 +2,11 @@ package params
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	errs "github.com/elangreza14/lion-superindo/pkg/error"
 )
 
 type ProductResponse struct {
@@ -38,7 +39,7 @@ type ListProductsQueryParams struct {
 func (pqr *ListProductsQueryParams) Validate() error {
 
 	if err := pqr.PaginationParams.Validate(); err != nil {
-		return err
+		return errs.ValidationError{Err: err}
 	}
 
 	validSortKeys := map[string]bool{
@@ -46,7 +47,7 @@ func (pqr *ListProductsQueryParams) Validate() error {
 	}
 	for sortKey := range pqr.GetSortMapping() {
 		if !validSortKeys[sortKey] {
-			return fmt.Errorf("%s not valid sort key", sortKey)
+			return errs.ValidationError{Message: fmt.Sprint("%s not valid sort key", sortKey)}
 		}
 	}
 
@@ -58,7 +59,7 @@ func (pqr *ListProductsQueryParams) Validate() error {
 
 	key, err := json.Marshal(mapKey)
 	if err != nil {
-		return errors.New("failed to marshal query params for cache key")
+		return errs.ValidationError{Message: "failed to marshal query params for cache key"}
 	}
 
 	pqr.paramsKey = string(key)
@@ -82,14 +83,14 @@ type CreateProductResponse struct {
 
 func (pqr *CreateProductRequest) Validate() error {
 	if len(pqr.Name) == 0 {
-		return errors.New("name cannot be empty")
+		return errs.ValidationError{Message: "name cannot be empty"}
 	}
 	if len(pqr.Type) == 0 {
-		return errors.New("type cannot be empty")
+		return errs.ValidationError{Message: "type cannot be empty"}
 	}
 	pqr.Type = strings.ToLower(pqr.Type)
 	if pqr.Price < 0 {
-		return errors.New("price cannot be negative")
+		return errs.ValidationError{Message: "price cannot be negative"}
 	}
 	return nil
 }

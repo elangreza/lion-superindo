@@ -28,14 +28,25 @@ func (pqr *PaginationParams) Validate() error {
 
 	var orderingBuilder strings.Builder
 	if len(pqr.Sorts) > 0 {
+		newSorts := []string{}
+		for _, sort := range pqr.Sorts {
+			if strings.Contains(sort, ",") {
+				newSorts = append(newSorts, strings.Split(sort, ",")...)
+			} else {
+				newSorts = append(newSorts, sort)
+			}
+		}
+
 		pqr.sortMap = make(map[string]string)
-		for _, sortRaw := range pqr.Sorts {
+		for _, sortRaw := range newSorts {
 			parts := strings.Split(sortRaw, ":")
 			if len(parts) != 2 {
-				return errors.New("not valid sort format")
+				return fmt.Errorf("not valid sort format: %s", sortRaw)
 			}
 
-			value, direction := strings.ToLower(parts[0]), strings.ToLower(parts[1])
+			value := strings.ToLower(strings.TrimSpace(parts[0]))
+			direction := strings.ToLower(strings.TrimSpace(parts[1]))
+
 			if direction != "asc" && direction != "desc" {
 				return errors.New("not valid sort direction")
 			}

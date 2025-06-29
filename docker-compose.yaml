@@ -23,7 +23,7 @@ services:
     image: redis:latest
     restart: always
     ports:
-      - "6379:6379"
+      - ${REDIS_PORT}:${REDIS_PORT}
     volumes:
       - /path/to/local/dаta:/root/redis
       - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
@@ -54,10 +54,10 @@ services:
     networks:
       - superindo
     ports:
-      - "8080:8080"
+      - ${HTTP_PORT}:${HTTP_PORT}
     build: .
     container_name: superindoapp
-    restart: on-failure:3 
+    restart: on-failure:3
     env_file:
       - docker.env
     depends_on:
