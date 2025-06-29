@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/elangreza14/lion-superindo/internal/domain"
-	"github.com/elangreza14/lion-superindo/internal/params"
+	"github.com/elangreza/lion-superindo/internal/domain"
+	"github.com/elangreza/lion-superindo/internal/params"
 )
 
 const (

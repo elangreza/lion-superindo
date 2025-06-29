@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	errs "github.com/elangreza14/lion-superindo/pkg/error"
+	errs "github.com/elangreza/lion-superindo/pkg/error"
 )
 
 func NewRoutes(productHandler *ProductHandler) *http.ServeMux {

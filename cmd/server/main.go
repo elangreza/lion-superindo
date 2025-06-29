@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/elangreza14/lion-superindo/cmd/server/config"
+	"github.com/elangreza/lion-superindo/cmd/server/config"
 
-	_ "github.com/elangreza14/lion-superindo/docs"
+	_ "github.com/elangreza/lion-superindo/docs"
 	_ "github.com/lib/pq"
 	httpSwagger "github.com/swaggo/http-swagger"
 )

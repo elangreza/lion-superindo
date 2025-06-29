@@ -8,18 +8,18 @@ package main
 
 import (
 	"database/sql"
-	"github.com/elangreza14/lion-superindo/cmd/server/config"
-	"github.com/elangreza14/lion-superindo/internal/handler"
-	"github.com/elangreza14/lion-superindo/internal/postgresql"
-	"github.com/elangreza14/lion-superindo/internal/redis"
-	"github.com/elangreza14/lion-superindo/internal/service"
+	"github.com/elangreza/lion-superindo/cmd/server/config"
+	"github.com/elangreza/lion-superindo/internal/handler"
+	"github.com/elangreza/lion-superindo/internal/postgresql"
+	"github.com/elangreza/lion-superindo/internal/redis"
+	"github.com/elangreza/lion-superindo/internal/service"
 	"github.com/google/wire"
 	redis2 "github.com/redis/go-redis/v9"
 	"net/http"
 )
 
 import (
-	_ "github.com/elangreza14/lion-superindo/docs"
+	_ "github.com/elangreza/lion-superindo/docs"
 	_ "github.com/lib/pq"
 )
 

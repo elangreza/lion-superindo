@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/elangreza14/lion-superindo/internal/domain"
-	"github.com/elangreza14/lion-superindo/internal/params"
+	"github.com/elangreza/lion-superindo/internal/domain"
+	"github.com/elangreza/lion-superindo/internal/params"
 	"github.com/go-redis/redismock/v9"
 	"github.com/stretchr/testify/assert"
 )

@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/elangreza14/lion-superindo/internal/params"
-	mockhandler "github.com/elangreza14/lion-superindo/mock/handler"
+	"github.com/elangreza/lion-superindo/internal/params"
+	mockhandler "github.com/elangreza/lion-superindo/mock/handler"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

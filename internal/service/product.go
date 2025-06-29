@@ -6,9 +6,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/elangreza14/lion-superindo/internal/domain"
-	"github.com/elangreza14/lion-superindo/internal/params"
-	errs "github.com/elangreza14/lion-superindo/pkg/error"
+	"github.com/elangreza/lion-superindo/internal/domain"
+	"github.com/elangreza/lion-superindo/internal/params"
+	errs "github.com/elangreza/lion-superindo/pkg/error"
 	"github.com/redis/go-redis/v9"
 )
 

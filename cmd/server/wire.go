@@ -7,11 +7,11 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/elangreza14/lion-superindo/cmd/server/config"
-	"github.com/elangreza14/lion-superindo/internal/handler"
-	postgreRepo "github.com/elangreza14/lion-superindo/internal/postgresql"
-	redisRepo "github.com/elangreza14/lion-superindo/internal/redis"
-	"github.com/elangreza14/lion-superindo/internal/service"
+	"github.com/elangreza/lion-superindo/cmd/server/config"
+	"github.com/elangreza/lion-superindo/internal/handler"
+	postgreRepo "github.com/elangreza/lion-superindo/internal/postgresql"
+	redisRepo "github.com/elangreza/lion-superindo/internal/redis"
+	"github.com/elangreza/lion-superindo/internal/service"
 	"github.com/google/wire"
 	"github.com/redis/go-redis/v9"
 )

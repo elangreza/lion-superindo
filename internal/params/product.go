@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	errs "github.com/elangreza14/lion-superindo/pkg/error"
+	errs "github.com/elangreza/lion-superindo/pkg/error"
 )
 
 type ProductResponse struct {

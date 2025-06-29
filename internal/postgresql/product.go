@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/elangreza14/lion-superindo/internal/domain"
-	"github.com/elangreza14/lion-superindo/internal/params"
+	"github.com/elangreza/lion-superindo/internal/domain"
+	"github.com/elangreza/lion-superindo/internal/params"
 )
 
 func (pr *PostgresRepo) listQuery(req params.ListProductsQueryParams) squirrel.SelectBuilder {

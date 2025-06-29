@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	params "github.com/elangreza14/lion-superindo/internal/params"
+	params "github.com/elangreza/lion-superindo/internal/params"
 	gomock "go.uber.org/mock/gomock"
 )
 

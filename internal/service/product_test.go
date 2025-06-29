@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/elangreza14/lion-superindo/internal/domain"
-	"github.com/elangreza14/lion-superindo/internal/params"
-	mockservice "github.com/elangreza14/lion-superindo/mock/service"
+	"github.com/elangreza/lion-superindo/internal/domain"
+	"github.com/elangreza/lion-superindo/internal/params"
+	mockservice "github.com/elangreza/lion-superindo/mock/service"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
